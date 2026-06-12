@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="10dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="10dp"
+    app:cardBackgroundColor="#FFFFFF"
+
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="18dp">
+
+        <!-- NAMA (klik untuk edit) -->
+        <TextView
+            android:id="@+id/tvNama"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nama"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="#1E1E1E"/>
+
+        <TextView
+            android:id="@+id/tvJabatan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Jabatan"
+            android:textSize="14sp"
+            android:textColor="#666"
+            android:layout_marginTop="4dp"/>
+
+        <TextView
+            android:id="@+id/tvTelp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Telp"
+            android:textSize="14sp"
+            android:textColor="#666"
+            android:layout_marginTop="2dp"/>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:background="@drawable/bg_gradient"
+    android:padding="24dp"
+    tools:context=".ProfilActivity">
+
+    <!-- CARD -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="14dp"
+        app:cardBackgroundColor="#FFFFFF">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="28dp">
+
+            <!-- TOP BAR -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
+
+                <ImageView
+                    android:id="@+id/btnBack"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_media_previous"
+                    app:tint="#4F46E5"
+                    android:padding="10dp"
+                    android:contentDescription="Back"
+                    android:clickable="true"
+                    android:focusable="true"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PROFIL"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:textColor="#111827"
+                    android:layout_marginStart="10dp"/>
+            </LinearLayout>
+
+            <!-- AVATAR -->
+            <ImageView
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                android:layout_gravity="center"
+                android:src="@android:drawable/sym_def_app_icon"
+                android:background="#EEF2FF"
+                android:padding="18dp"
+                app:tint="#4F46E5"
+                android:layout_marginBottom="12dp"/>
+
+            <!-- NAMA -->
+            <TextView
+                android:id="@+id/tvNama"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nama Karyawan"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#111827"
+                android:layout_gravity="center"/>
+
+            <!-- EMAIL -->
+            <TextView
+                android:id="@+id/tvEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="karyawan@email.com"
+                android:textSize="14sp"
+                android:textColor="#374151"
+                android:layout_gravity="center"
+                android:layout_marginBottom="20dp"/>
+
+            <!-- MENU LIST -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- EDIT PROFIL -->
+                <TextView
+                    android:id="@+id/btnEditProfil"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Edit Profil"
+                    android:padding="14dp"
+                    android:textSize="15sp"
+                    android:textColor="#111827"
+                    android:background="#F8FAFC"/>
+
+                <!-- GANTI PASSWORD -->
+                <TextView
+                    android:id="@+id/btnGantiPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ganti Password"
+                    android:padding="14dp"
+                    android:textSize="15sp"
+                    android:textColor="#111827"
+                    android:layout_marginTop="8dp"
+                    android:background="#F8FAFC"/>
+
+                <!-- LOGOUT -->
+                <TextView
+                    android:id="@+id/tvLogout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Logout"
+                    android:padding="14dp"
+                    android:textSize="15sp"
+                    android:textColor="#B91C1C"
+                    android:layout_marginTop="8dp"
+                    android:background="#FEF2F2"/>
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>

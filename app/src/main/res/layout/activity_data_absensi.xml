@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient">
+
+    <!-- CENTER WRAPPER -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- MAIN CARD -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="14dp"
+            app:cardBackgroundColor="#FFFFFF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <!-- TOP BAR -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <ImageView
+                        android:id="@+id/btnBack"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:src="@android:drawable/ic_media_previous"
+                        app:tint="#4F46E5"
+                        android:padding="4dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Kembali"
+                        android:textColor="#4F46E5"
+                        android:textStyle="bold"
+                        android:textSize="14sp"
+                        android:layout_marginStart="6dp"/>
+                </LinearLayout>
+
+                <!-- ICON -->
+                <ImageView
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:src="@android:drawable/ic_menu_recent_history"
+                    app:tint="#10B981"
+                    android:layout_marginBottom="10dp"/>
+
+                <!-- TITLE -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DATA ABSENSI"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="#1E1E1E"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kelola data absensi karyawan"
+                    android:textSize="13sp"
+                    android:textColor="#777"
+                    android:layout_marginBottom="16dp"/>
+
+                <!-- LIST ABSENSI -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerAbsensi"
+                    android:layout_width="match_parent"
+                    android:layout_height="400dp"
+                    android:scrollbars="vertical"
+                    android:overScrollMode="never"/>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+</RelativeLayout>

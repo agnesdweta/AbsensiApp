@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="10dp"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="6dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- NAMA -->
+        <TextView
+            android:id="@+id/tvNama"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nama Karyawan"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="#111827"/>
+
+        <!-- TANGGAL -->
+        <TextView
+            android:id="@+id/tvTanggal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tanggal"
+            android:textColor="#4B5563"
+            android:textSize="14sp"
+            android:layout_marginTop="6dp"/>
+
+        <!-- JAM -->
+        <TextView
+            android:id="@+id/tvJam"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="08:00 - 17:00"
+            android:textColor="#4F46E5"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp"/>
+
+        <!-- ACTION BUTTON -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="end"
+            android:layout_marginTop="14dp">
+
+            <!-- EDIT -->
+            <ImageView
+                android:id="@+id/btnEdit"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@android:drawable/ic_menu_edit"
+                android:background="@drawable/bg_circle_blue"
+                android:padding="10dp"
+                android:contentDescription="Edit Data"
+                app:tint="#FFFFFF"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <!-- DELETE -->
+            <ImageView
+                android:id="@+id/btnDelete"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="10dp"
+                android:src="@android:drawable/ic_menu_delete"
+                android:background="@drawable/bg_circle_red"
+                android:padding="10dp"
+                android:contentDescription="Hapus Data"
+                app:tint="#FFFFFF"
+                android:clickable="true"
+                android:focusable="true"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@drawable/bg_gradient"
+    android:padding="24dp">
+
+    <!-- MAIN CARD -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="14dp"
+        app:cardBackgroundColor="#FFFFFF">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="28dp"
+            android:gravity="center_horizontal">
+
+            <!-- TOP BAR -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <ImageView
+                    android:id="@+id/btnBack"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:src="@android:drawable/ic_media_previous"
+                    app:tint="#4F46E5"
+                    android:padding="4dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kembali"
+                    android:textColor="#4F46E5"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginStart="6dp"/>
+            </LinearLayout>
+
+            <!-- ICON -->
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@android:drawable/ic_menu_my_calendar"
+                app:tint="#4F46E5"
+                android:background="#EEF2FF"
+                android:padding="18dp"
+                android:layout_marginBottom="12dp"/>
+
+            <!-- TITLE -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PENGAJUAN CUTI"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="#1E1E1E"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lengkapi data pengajuan cuti"
+                android:textSize="13sp"
+                android:textColor="#777"
+                android:layout_marginBottom="22dp"/>
+
+            <!-- TANGGAL MULAI -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:boxBackgroundMode="filled"
+                app:boxBackgroundColor="#F8FAFC"
+                app:boxCornerRadiusTopStart="18dp"
+                app:boxCornerRadiusTopEnd="18dp"
+                app:boxCornerRadiusBottomStart="18dp"
+                app:boxCornerRadiusBottomEnd="18dp"
+                app:startIconDrawable="@android:drawable/ic_menu_today"
+                app:startIconTint="#4F46E5">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etTanggalMulai"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Tanggal Mulai"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:textSize="15sp"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- TANGGAL SELESAI -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:boxBackgroundMode="filled"
+                app:boxBackgroundColor="#F8FAFC"
+                app:boxCornerRadiusTopStart="18dp"
+                app:boxCornerRadiusTopEnd="18dp"
+                app:boxCornerRadiusBottomStart="18dp"
+                app:boxCornerRadiusBottomEnd="18dp"
+                app:startIconDrawable="@android:drawable/ic_menu_today"
+                app:startIconTint="#4F46E5">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etTanggalSelesai"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Tanggal Selesai"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:textSize="15sp"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- ALASAN CUTI -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:boxBackgroundMode="filled"
+                app:boxBackgroundColor="#F8FAFC"
+                app:boxCornerRadiusTopStart="18dp"
+                app:boxCornerRadiusTopEnd="18dp"
+                app:boxCornerRadiusBottomStart="18dp"
+                app:boxCornerRadiusBottomEnd="18dp"
+                app:startIconDrawable="@android:drawable/ic_menu_edit"
+                app:startIconTint="#4F46E5">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etAlasan"
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:hint="Masukkan alasan cuti"
+                    android:gravity="top"
+                    android:inputType="textMultiLine"
+                    android:textSize="15sp"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- BUTTON AJUKAN -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAjukanCuti"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:text="Ajukan Cuti"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:textSize="15sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#4F46E5"
+                app:cornerRadius="18dp"
+                app:icon="@android:drawable/ic_menu_send"
+                app:iconGravity="textStart"
+                app:iconPadding="10dp"/>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>
