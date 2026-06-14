@@ -14,31 +14,25 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.button.MaterialButton;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import org.json.JSONObject;
+
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 public class AbsenActivity extends AppCompatActivity {
 
-    MaterialButton btnMasuk, btnKeluar;
+    private MaterialButton btnMasuk, btnKeluar;
+    private TextView tvStatus, tvJamMasuk;
+    private ImageView btnBack;
 
-    TextView tvStatus,
-            tvJamMasuk;
-
-    ImageView btnBack;
-
-    RequestQueue queue;
-
-    SharedPreferences sharedPreferences;
+    private RequestQueue queue;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_absen);
 
-        // ================= INIT =================
         btnMasuk = findViewById(R.id.btnMasuk);
         btnKeluar = findViewById(R.id.btnKeluar);
 
@@ -48,169 +42,128 @@ public class AbsenActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
 
         queue = Volley.newRequestQueue(this);
-
-        sharedPreferences =
-                getSharedPreferences("ABSEN", MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
 
         loadStatus();
 
-        // ================= BACK =================
         btnBack.setOnClickListener(v -> finish());
-
-        // ================= ABSEN MASUK =================
         btnMasuk.setOnClickListener(v -> absenMasuk());
-
-        // ================= ABSEN KELUAR =================
         btnKeluar.setOnClickListener(v -> absenKeluar());
     }
 
-    // =================================================
-    // LOAD STATUS
-    // =================================================
+    // ================= CEK ID =================
+    private String getIdKaryawan() {
+        String id = sharedPreferences.getString("id_karyawan", "");
+
+        if (id == null || id.isEmpty()) {
+            Toast.makeText(this, "ID Karyawan tidak ditemukan", Toast.LENGTH_SHORT).show();
+            return null;
+        }
+        return id;
+    }
+
+    // ================= LOAD STATUS =================
     private void loadStatus() {
 
-        String status =
-                sharedPreferences.getString(
-                        "status",
-                        "BELUM ABSEN"
-                );
+        String idKaryawan = getIdKaryawan();
+        if (idKaryawan == null) return;
 
-        String jamMasuk =
-                sharedPreferences.getString(
-                        "jam_masuk",
-                        "--:--:--"
-                );
+        String url =
+                "http://10.0.2.2/absensi/public/api/absen/status?id_karyawan=" + idKaryawan;
 
-        String jamKeluar =
-                sharedPreferences.getString(
-                        "jam_keluar",
-                        "--:--:--"
-                );
+        StringRequest request = new StringRequest(
+                Request.Method.GET,
+                url,
+                response -> {
+                    try {
 
-        tvStatus.setText("STATUS: " + status);
-        // ================= TAMPIL JAM =================
-        if (status.equals("PULANG")) {
+                        JSONObject obj = new JSONObject(response);
 
-            tvJamMasuk.setText(
-                    "Jam Kerja : "
-                            + jamMasuk
-                            + " - "
-                            + jamKeluar
-            );
-        } else {
+                        boolean status = obj.getBoolean("status");
+                        if (!status) {
+                            Toast.makeText(this,
+                                    obj.getString("message"),
+                                    Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
-            tvJamMasuk.setText(
-                    "Jam Masuk : " + jamMasuk
-            );
-        }
+                        JSONObject data = obj.getJSONObject("data");
 
-        // ================= WARNA STATUS =================
-        if (status.equals("BELUM ABSEN")) {
+                        String statusAbsen = data.optString("status_absen", "BELUM ABSEN");
+                        String jamMasuk = data.optString("jam_masuk", "--:--:--");
+                        String jamPulang = data.optString("jam_pulang", "--:--:--");
 
-            tvStatus.setBackgroundColor(
-                    getResources().getColor(
-                            android.R.color.holo_red_dark
-                    )
-            );
+                        tvStatus.setText("STATUS: " + statusAbsen);
 
-        } else if (status.equals("HADIR")) {
+                        if (statusAbsen.equals("BELUM ABSEN")) {
 
-            tvStatus.setBackgroundColor(
-                    getResources().getColor(
-                            android.R.color.holo_green_dark
-                    )
-            );
+                            tvStatus.setBackgroundColor(
+                                    getResources().getColor(android.R.color.holo_red_dark)
+                            );
+                            tvJamMasuk.setText("Belum absen hari ini");
 
-        } else if (status.equals("PULANG")) {
+                        } else if (statusAbsen.equals("HADIR")) {
 
-            tvStatus.setBackgroundColor(
-                    getResources().getColor(
-                            android.R.color.holo_blue_dark
-                    )
-            );
-        }
+                            tvStatus.setBackgroundColor(
+                                    getResources().getColor(android.R.color.holo_green_dark)
+                            );
+                            tvJamMasuk.setText("Jam Masuk: " + jamMasuk);
+
+                        } else {
+
+                            tvStatus.setBackgroundColor(
+                                    getResources().getColor(android.R.color.holo_blue_dark)
+                            );
+                            tvJamMasuk.setText("Jam Kerja: " + jamMasuk + " - " + jamPulang);
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(this, "Error JSON: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> Toast.makeText(this, "Gagal ambil status", Toast.LENGTH_SHORT).show()
+        );
+
+        queue.add(request);
     }
 
-    // ====
-    // ABSEN MASUK
-    // ====
+    // ================= ABSEN MASUK =================
     private void absenMasuk() {
 
-        String url =
-                "http://10.0.2.2/absensi/public/api/absen/masuk";
+        String idKaryawan = getIdKaryawan();
+        if (idKaryawan == null) return;
+
+        String url = "http://10.0.2.2/absensi/public/api/absen/masuk";
 
         StringRequest request = new StringRequest(
                 Request.Method.POST,
                 url,
-
                 response -> {
+                    try {
+                        JSONObject obj = new JSONObject(response);
 
-                    String jamMasuk =
-                            getJamSekarang();
+                        boolean status = obj.getBoolean("status");
+                        String message = obj.getString("message");
 
-                    String jamKeluar =
-                            sharedPreferences.getString(
-                                    "jam_keluar",
-                                    "--:--:--"
-                            );
+                        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
 
-                    // ================= UI =================
-                    tvStatus.setText("STATUS: HADIR");
+                        if (status) {
+                            loadStatus();
+                        }
 
-                    tvStatus.setBackgroundColor(
-                            getResources().getColor(
-                                    android.R.color.holo_green_dark
-                            )
-                    );
-
-                    tvJamMasuk.setText(
-                            "Jam Masuk : " + jamMasuk
-                    );
-
-                    // ================= SIMPAN =================
-                    SharedPreferences.Editor editor =
-                            sharedPreferences.edit();
-
-                    editor.putString("status", "HADIR");
-                    editor.putString("jam_masuk", jamMasuk);
-
-                    editor.apply();
-
-                    Toast.makeText(
-                            this,
-                            "Absen Masuk Berhasil",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                },
-
-                error -> {
-
-                    String pesan = "Gagal koneksi";
-
-                    if (error.networkResponse != null) {
-
-                        pesan =
-                                "Error : "
-                                        + error.networkResponse.statusCode;
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Response error", Toast.LENGTH_SHORT).show();
                     }
-
-                    Toast.makeText(
-                            this,
-                            pesan,
-                            Toast.LENGTH_LONG
-                    ).show();
-                }
-
+                },
+                error -> Toast.makeText(this, "Gagal koneksi", Toast.LENGTH_SHORT).show()
         ) {
             @Override
             protected Map<String, String> getParams() {
 
-                Map<String, String> params =
-                        new HashMap<>();
-
-                params.put("id_karyawan", "1");
-                params.put("jam_masuk", getJamSekarang());
-
+                Map<String, String> params = new HashMap<>();
+                params.put("id_karyawan", idKaryawan);
                 return params;
             }
         };
@@ -218,104 +171,45 @@ public class AbsenActivity extends AppCompatActivity {
         queue.add(request);
     }
 
-    // =================================================
-    // ABSEN KELUAR
-    // =================================================
+    // ================= ABSEN KELUAR =================
     private void absenKeluar() {
 
-        String url =
-                "http://10.0.2.2/absensi/public/api/absen/keluar";
+        String idKaryawan = getIdKaryawan();
+        if (idKaryawan == null) return;
+
+        String url = "http://10.0.2.2/absensi/public/api/absen/keluar";
 
         StringRequest request = new StringRequest(
                 Request.Method.POST,
                 url,
-
                 response -> {
+                    try {
+                        JSONObject obj = new JSONObject(response);
 
-                    String jamMasuk =
-                            sharedPreferences.getString(
-                                    "jam_masuk",
-                                    "--:--:--"
-                            );
+                        boolean status = obj.getBoolean("status");
+                        String message = obj.getString("message");
 
-                    String jamKeluar =
-                            getJamSekarang();
+                        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
 
-                    // ================= UI =================
-                    tvStatus.setText("STATUS: PULANG");
+                        if (status) {
+                            loadStatus();
+                        }
 
-                    tvStatus.setBackgroundColor(
-                            getResources().getColor(
-                                    android.R.color.holo_blue_dark
-                            )
-                    );
-
-                    tvJamMasuk.setText(
-                            "Jam Kerja : "
-                                    + jamMasuk
-                                    + " - "
-                                    + jamKeluar
-                    );
-
-                    // ================= SIMPAN =================
-                    SharedPreferences.Editor editor =
-                            sharedPreferences.edit();
-
-                    editor.putString("status", "PULANG");
-                    editor.putString("jam_keluar", jamKeluar);
-
-                    editor.apply();
-
-                    Toast.makeText(
-                            this,
-                            "Absen Keluar Berhasil",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                },
-
-                error -> {
-
-                    String pesan = "Server Error";
-
-                    if (error.networkResponse != null) {
-
-                        pesan =
-                                "Error : "
-                                        + error.networkResponse.statusCode;
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Response error", Toast.LENGTH_SHORT).show();
                     }
-
-                    Toast.makeText(
-                            this,
-                            pesan,
-                            Toast.LENGTH_LONG
-                    ).show();
-                }
-
+                },
+                error -> Toast.makeText(this, "Server Error", Toast.LENGTH_SHORT).show()
         ) {
             @Override
             protected Map<String, String> getParams() {
 
-                Map<String, String> params =
-                        new HashMap<>();
-
-                params.put("id_karyawan", "1");
-                params.put("jam_keluar", getJamSekarang());
-
+                Map<String, String> params = new HashMap<>();
+                params.put("id_karyawan", idKaryawan);
                 return params;
             }
         };
 
         queue.add(request);
-    }
-
-    // =================================================
-    // GET JAM SEKARANG
-    // =================================================
-    private String getJamSekarang() {
-
-        return new SimpleDateFormat(
-                "HH:mm:ss",
-                Locale.getDefault()
-        ).format(new Date());
     }
 }

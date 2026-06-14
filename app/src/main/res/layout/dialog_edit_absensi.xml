@@ -20,38 +20,76 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="EDIT PROFIL"
+            android:text="EDIT ABSENSI"
             android:textStyle="bold"
             android:textSize="20sp"
             android:textColor="#111827"
             android:layout_gravity="center"
             android:layout_marginBottom="20dp"/>
 
-        <!-- NAMA -->
+        <!-- TANGGAL -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nama"
+            android:hint="Tanggal"
             app:boxCornerRadiusTopStart="18dp"
             app:boxCornerRadiusTopEnd="18dp"
             app:boxCornerRadiusBottomStart="18dp"
             app:boxCornerRadiusBottomEnd="18dp">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etNama"
+                android:id="@+id/etTanggal"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- ROLE / JABATAN -->
+        <!-- JAM MASUK -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:hint="Role / Jabatan">
+            android:hint="Jam Masuk"
+            app:boxCornerRadiusTopStart="18dp"
+            app:boxCornerRadiusTopEnd="18dp"
+            app:boxCornerRadiusBottomStart="18dp"
+            app:boxCornerRadiusBottomEnd="18dp">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etRole"
+                android:id="@+id/etJamMasuk"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- JAM PULANG -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:hint="Jam Pulang"
+            app:boxCornerRadiusTopStart="18dp"
+            app:boxCornerRadiusTopEnd="18dp"
+            app:boxCornerRadiusBottomStart="18dp"
+            app:boxCornerRadiusBottomEnd="18dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etJamPulang"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- STATUS -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:hint="Status"
+            app:boxCornerRadiusTopStart="18dp"
+            app:boxCornerRadiusTopEnd="18dp"
+            app:boxCornerRadiusBottomStart="18dp"
+            app:boxCornerRadiusBottomEnd="18dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
         </com.google.android.material.textfield.TextInputLayout>

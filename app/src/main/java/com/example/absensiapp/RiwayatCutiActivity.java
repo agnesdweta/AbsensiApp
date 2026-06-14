@@ -1,6 +1,8 @@
 package com.example.absensiapp;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -33,14 +35,11 @@ public class RiwayatCutiActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_riwayat_cuti);
 
-        // INIT VIEW
         recyclerView = findViewById(R.id.recyclerCuti);
         btnBack = findViewById(R.id.btnBack);
 
-        // BACK BUTTON
         btnBack.setOnClickListener(v -> finish());
 
-        // RECYCLER
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         adapter = new CutiAdapter(list, null, false);
@@ -51,11 +50,39 @@ public class RiwayatCutiActivity extends AppCompatActivity {
 
     private void loadData() {
 
-        StringRequest request = new StringRequest(Request.Method.GET, URL,
+        SharedPreferences sp = getSharedPreferences("user", MODE_PRIVATE);
+
+        String id_karyawan = sp.getString("id_karyawan", "");
+        String role = sp.getString("role", "");
+
+        Log.d("RIWAYAT_DEBUG", "id_karyawan = " + id_karyawan);
+        Log.d("RIWAYAT_DEBUG", "role = " + role);
+
+        if (id_karyawan.isEmpty()) {
+            Toast.makeText(this, "User belum login", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String url = "http://10.0.2.2/absensi/public/api/cuti/riwayat"
+                + "?id_karyawan=" + id_karyawan
+                + "&role=" + role;
+
+        StringRequest request = new StringRequest(Request.Method.GET, url,
                 response -> {
 
                     try {
+
+                        Log.d("RIWAYAT_RESPONSE", response);
+
                         JSONObject obj = new JSONObject(response);
+
+                        if (!obj.getBoolean("status")) {
+                            Toast.makeText(this,
+                                    obj.getString("message"),
+                                    Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
                         JSONArray arr = obj.getJSONArray("data");
 
                         list.clear();
@@ -65,8 +92,8 @@ public class RiwayatCutiActivity extends AppCompatActivity {
                             JSONObject item = arr.getJSONObject(i);
 
                             list.add(new CutiModel(
-                                    "", // id kosong
-                                    "", // nama kosong
+                                    item.optString("id"),
+                                    item.optString("id_karyawan"),
                                     item.optString("tanggal_mulai"),
                                     item.optString("tanggal_selesai"),
                                     item.optString("keterangan"),
@@ -77,17 +104,19 @@ public class RiwayatCutiActivity extends AppCompatActivity {
                         adapter.notifyDataSetChanged();
 
                     } catch (Exception e) {
+
                         Toast.makeText(this,
                                 "Parse Error: " + e.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
+
                 },
                 error -> {
 
                     String msg = "Gagal load data";
 
                     if (error.networkResponse != null) {
-                        msg = "CODE: " + error.networkResponse.statusCode;
+                        msg = "HTTP CODE: " + error.networkResponse.statusCode;
                     }
 
                     Toast.makeText(this, msg, Toast.LENGTH_LONG).show();

@@ -1,6 +1,7 @@
 package com.example.absensiapp;
 
 import android.app.DatePickerDialog;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -14,6 +15,8 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.button.MaterialButton;
 
+import org.json.JSONObject;
+
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,16 +27,16 @@ public class CutiActivity extends AppCompatActivity {
     MaterialButton btnAjukanCuti;
     ImageView btnBack;
 
-    // URL API
-    String URL_CUTI =
-            "http://10.0.2.2/absensi/public/api/cuti/ajukan";
+    RequestQueue queue;
+    SharedPreferences sharedPreferences;
+
+    String URL_CUTI = "http://10.0.2.2/absensi/public/api/cuti/ajukan";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cuti);
 
-        // ================= INIT =================
         etTanggalMulai = findViewById(R.id.etTanggalMulai);
         etTanggalSelesai = findViewById(R.id.etTanggalSelesai);
         etAlasan = findViewById(R.id.etAlasan);
@@ -41,172 +44,128 @@ public class CutiActivity extends AppCompatActivity {
         btnAjukanCuti = findViewById(R.id.btnAjukanCuti);
         btnBack = findViewById(R.id.btnBack);
 
-        // ================= BUTTON BACK =================
+        queue = Volley.newRequestQueue(this);
+        sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
+
         btnBack.setOnClickListener(v -> finish());
 
-        // ================= DISABLE KEYBOARD =================
         etTanggalMulai.setFocusable(false);
         etTanggalSelesai.setFocusable(false);
 
-        // ================= DATE PICKER =================
-        etTanggalMulai.setOnClickListener(v ->
-                showDatePicker(etTanggalMulai));
+        etTanggalMulai.setOnClickListener(v -> showDatePicker(etTanggalMulai));
+        etTanggalSelesai.setOnClickListener(v -> showDatePicker(etTanggalSelesai));
 
-        etTanggalSelesai.setOnClickListener(v ->
-                showDatePicker(etTanggalSelesai));
-
-        // ================= BUTTON AJUKAN =================
-        btnAjukanCuti.setOnClickListener(v ->
-                kirimCuti());
+        btnAjukanCuti.setOnClickListener(v -> kirimCuti());
     }
 
-    // ================= DATE PICKER =================
+    private String getIdKaryawan() {
+        String id = sharedPreferences.getString("id_karyawan", "");
+
+        if (id == null || id.isEmpty()) {
+            Toast.makeText(this, "ID karyawan tidak ditemukan", Toast.LENGTH_SHORT).show();
+            return null;
+        }
+        return id;
+    }
+
     private void showDatePicker(EditText editText) {
 
-        Calendar calendar = Calendar.getInstance();
-
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        Calendar c = Calendar.getInstance();
 
         DatePickerDialog dialog = new DatePickerDialog(
                 this,
-
-                (view, selectedYear, selectedMonth, selectedDay) -> {
+                (view, year, month, day) -> {
 
                     String tanggal =
-                            selectedYear + "-" +
-                                    String.format("%02d", selectedMonth + 1) + "-" +
-                                    String.format("%02d", selectedDay);
+                            year + "-" +
+                                    String.format("%02d", month + 1) + "-" +
+                                    String.format("%02d", day);
 
                     editText.setText(tanggal);
                 },
-
-                year,
-                month,
-                day
+                c.get(Calendar.YEAR),
+                c.get(Calendar.MONTH),
+                c.get(Calendar.DAY_OF_MONTH)
         );
 
         dialog.show();
     }
 
-    // ================= KIRIM CUTI =================
     private void kirimCuti() {
 
-        String tanggalMulai =
-                etTanggalMulai.getText().toString().trim();
+        String idKaryawan = getIdKaryawan();
+        if (idKaryawan == null) return;
 
-        String tanggalSelesai =
-                etTanggalSelesai.getText().toString().trim();
-
-        String alasan =
-                etAlasan.getText().toString().trim();
-
-        String namaKaryawan = "Karyawan Android";
-
-        // ================= VALIDASI =================
+        String tanggalMulai = etTanggalMulai.getText().toString().trim();
+        String tanggalSelesai = etTanggalSelesai.getText().toString().trim();
+        String alasan = etAlasan.getText().toString().trim();
 
         if (tanggalMulai.isEmpty()) {
-
-            etTanggalMulai.setError(
-                    "Tanggal mulai wajib diisi");
-
+            etTanggalMulai.setError("Wajib diisi");
             return;
         }
 
         if (tanggalSelesai.isEmpty()) {
-
-            etTanggalSelesai.setError(
-                    "Tanggal selesai wajib diisi");
-
+            etTanggalSelesai.setError("Wajib diisi");
             return;
         }
 
         if (alasan.isEmpty()) {
-
-            etAlasan.setError(
-                    "Alasan cuti wajib diisi");
-
+            etAlasan.setError("Wajib diisi");
             return;
         }
-
-        // ================= LOADING =================
 
         btnAjukanCuti.setEnabled(false);
         btnAjukanCuti.setText("Mengirim...");
 
-        // ================= REQUEST API =================
-
         StringRequest request = new StringRequest(
-
                 Request.Method.POST,
                 URL_CUTI,
-
                 response -> {
 
                     btnAjukanCuti.setEnabled(true);
                     btnAjukanCuti.setText("Ajukan Cuti");
 
-                    Toast.makeText(
-                            CutiActivity.this,
-                            response,
-                            Toast.LENGTH_LONG
-                    ).show();
+                    try {
+                        JSONObject obj = new JSONObject(response);
 
-                    // RESET FORM
-                    etTanggalMulai.setText("");
-                    etTanggalSelesai.setText("");
-                    etAlasan.setText("");
+                        boolean status = obj.optBoolean("status", false);
+                        String message = obj.optString("message", "OK");
+
+                        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+
+                        if (status) {
+                            etTanggalMulai.setText("");
+                            etTanggalSelesai.setText("");
+                            etAlasan.setText("");
+                        }
+
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Response error JSON", Toast.LENGTH_SHORT).show();
+                    }
                 },
-
                 error -> {
 
                     btnAjukanCuti.setEnabled(true);
                     btnAjukanCuti.setText("Ajukan Cuti");
 
-                    Toast.makeText(
-                            CutiActivity.this,
-                            error.toString(),
-                            Toast.LENGTH_LONG
-                    ).show();
+                    Toast.makeText(this, "Server Error", Toast.LENGTH_SHORT).show();
                 }
-
         ) {
 
             @Override
             protected Map<String, String> getParams() {
 
-                Map<String, String> params =
-                        new HashMap<>();
+                Map<String, String> params = new HashMap<>();
 
-                params.put(
-                        "nama_karyawan",
-                        namaKaryawan
-                );
-
-                params.put(
-                        "tanggal_mulai",
-                        tanggalMulai
-                );
-
-                params.put(
-                        "tanggal_selesai",
-                        tanggalSelesai
-                );
-
-                params.put(
-                        "keterangan",
-                        alasan
-                );
+                params.put("id_karyawan", idKaryawan);
+                params.put("tanggal_mulai", tanggalMulai);
+                params.put("tanggal_selesai", tanggalSelesai);
+                params.put("keterangan", alasan);
 
                 return params;
             }
         };
-
-        // ================= JALANKAN REQUEST =================
-
-        RequestQueue queue =
-                Volley.newRequestQueue(this);
 
         queue.add(request);
     }

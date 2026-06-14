@@ -7,18 +7,22 @@ public class AbsensiModel {
     String tanggal;
     String jamMasuk;
     String jamKeluar;
+    String status;
 
-    public AbsensiModel(String id,
-                        String nama,
-                        String tanggal,
-                        String jamMasuk,
-                        String jamKeluar) {
+    public AbsensiModel(
+            String id,
+            String nama,
+            String tanggal,
+            String jamMasuk,
+            String jamKeluar,
+            String status) {
 
         this.id = id;
         this.nama = nama;
         this.tanggal = tanggal;
         this.jamMasuk = jamMasuk;
         this.jamKeluar = jamKeluar;
+        this.status = status;
     }
 
     public String getId() {
@@ -39,5 +43,9 @@ public class AbsensiModel {
 
     public String getJamKeluar() {
         return jamKeluar;
+    }
+
+    public String getStatus() {
+        return status;
     }
 }

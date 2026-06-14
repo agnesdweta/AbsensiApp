@@ -13,11 +13,20 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class ProfilActivity extends AppCompatActivity {
 
     ImageView btnBack;
 
-    TextView tvNama, tvEmail;
+    TextView tvNama, tvIdKaryawan, tvRole;
 
     TextView btnEditProfil,
             btnGantiPassword,
@@ -30,52 +39,34 @@ public class ProfilActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profil);
 
-        // INIT
         btnBack = findViewById(R.id.btnBack);
 
         tvNama = findViewById(R.id.tvNama);
-        tvEmail = findViewById(R.id.tvEmail);
+        tvIdKaryawan = findViewById(R.id.tvIdKaryawan);
+        tvRole = findViewById(R.id.tvRole);
 
         btnEditProfil = findViewById(R.id.btnEditProfil);
         btnGantiPassword = findViewById(R.id.btnGantiPassword);
         tvLogout = findViewById(R.id.tvLogout);
 
-        preferences = getSharedPreferences("LOGIN", MODE_PRIVATE);
+        preferences = getSharedPreferences("user", MODE_PRIVATE);
 
-        // LOAD DATA
         loadProfil();
 
-        // BACK
         btnBack.setOnClickListener(v -> finish());
 
-        // EDIT PROFIL
-        btnEditProfil.setOnClickListener(v -> {
-            showDialogEditProfil();
-        });
+        btnEditProfil.setOnClickListener(v -> showDialogEditProfil());
 
-        // GANTI PASSWORD
-        btnGantiPassword.setOnClickListener(v -> {
-            showDialogPassword();
-        });
+        btnGantiPassword.setOnClickListener(v -> showDialogPassword());
 
-        // LOGOUT
         tvLogout.setOnClickListener(v -> {
 
-            Toast.makeText(this,
-                    "Logout berhasil",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Logout berhasil", Toast.LENGTH_SHORT).show();
 
-            preferences.edit()
-                    .remove("isLogin")
-                    .apply();
+            preferences.edit().clear().apply();
 
-            Intent intent =
-                    new Intent(this, LoginActivity.class);
-
-            intent.setFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK |
-                            Intent.FLAG_ACTIVITY_CLEAR_TASK
-            );
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
             startActivity(intent);
             finish();
@@ -85,18 +76,13 @@ public class ProfilActivity extends AppCompatActivity {
     // ================= LOAD PROFIL =================
     private void loadProfil() {
 
-        String nama = preferences.getString(
-                "nama",
-                "Agnes Dwetasari"
-        );
-
-        String email = preferences.getString(
-                "email",
-                "agnes@gmail.com"
-        );
+        String nama = preferences.getString("nama", "-");
+        String idKaryawan = preferences.getString("id_karyawan", "-");
+        String role = preferences.getString("role", "-");
 
         tvNama.setText(nama);
-        tvEmail.setText(email);
+        tvIdKaryawan.setText("ID: " + idKaryawan);
+        tvRole.setText(role);
     }
 
     // ================= EDIT PROFIL =================
@@ -106,46 +92,86 @@ public class ProfilActivity extends AppCompatActivity {
                 .inflate(R.layout.dialog_edit_profil, null);
 
         EditText etNama = view.findViewById(R.id.etNama);
-        EditText etEmail = view.findViewById(R.id.etEmail);
+        EditText etRole = view.findViewById(R.id.etRole);
 
         etNama.setText(tvNama.getText().toString());
-        etEmail.setText(tvEmail.getText().toString());
+        etRole.setText(tvRole.getText().toString());
 
-        AlertDialog dialog =
-                new AlertDialog.Builder(this)
-                        .setView(view)
-                        .create();
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(view)
+                .create();
 
         dialog.show();
 
         view.findViewById(R.id.btnSimpan)
                 .setOnClickListener(v -> {
 
-                    String namaBaru =
-                            etNama.getText().toString();
+                    String namaBaru = etNama.getText().toString().trim();
+                    String roleBaru = etRole.getText().toString().trim();
+                    String idUser = preferences.getString("id_user", "");
 
-                    String emailBaru =
-                            etEmail.getText().toString();
+                    String url = "http://10.0.2.2/absensi/public/api/auth/updateProfil";
 
-                    // SIMPAN
-                    preferences.edit()
-                            .putString("nama", namaBaru)
-                            .putString("email", emailBaru)
-                            .apply();
+                    StringRequest request = new StringRequest(
+                            Request.Method.POST,
+                            url,
+                            response -> {
 
-                    // REFRESH
-                    loadProfil();
+                                try {
+                                    JSONObject obj = new JSONObject(response);
 
-                    Toast.makeText(this,
-                            "Profil berhasil diupdate",
-                            Toast.LENGTH_SHORT).show();
+                                    if (obj.getBoolean("status")) {
 
-                    dialog.dismiss();
+                                        JSONObject data = obj.getJSONObject("data");
+
+                                        // ================= UPDATE LOCAL STORAGE =================
+                                        preferences.edit()
+                                                .putString("id_user", idUser)
+                                                .putString("nama", data.getString("nama"))
+                                                .putString("role", data.getString("role"))
+                                                .putString("id_karyawan", data.optString("id_karyawan", ""))
+                                                .apply();
+
+                                        loadProfil();
+
+                                        Toast.makeText(this,
+                                                "Profil berhasil diupdate",
+                                                Toast.LENGTH_SHORT).show();
+
+                                        dialog.dismiss();
+
+                                    } else {
+                                        Toast.makeText(this,
+                                                obj.optString("message", "Gagal update"),
+                                                Toast.LENGTH_SHORT).show();
+                                    }
+
+                                } catch (Exception e) {
+                                    Toast.makeText(this,
+                                            "JSON error: " + e.getMessage(),
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            },
+                            error -> Toast.makeText(this,
+                                    "Server error",
+                                    Toast.LENGTH_SHORT).show()
+                    ) {
+                        @Override
+                        protected Map<String, String> getParams() {
+
+                            Map<String, String> p = new HashMap<>();
+                            p.put("id_user", idUser);
+                            p.put("nama", namaBaru);
+                            p.put("role", roleBaru);
+                            return p;
+                        }
+                    };
+
+                    Volley.newRequestQueue(this).add(request);
                 });
 
         view.findViewById(R.id.btnBatal)
-                .setOnClickListener(v ->
-                        dialog.dismiss());
+                .setOnClickListener(v -> dialog.dismiss());
     }
 
     // ================= GANTI PASSWORD =================
@@ -154,10 +180,9 @@ public class ProfilActivity extends AppCompatActivity {
         View view = LayoutInflater.from(this)
                 .inflate(R.layout.dialog_ganti_password, null);
 
-        AlertDialog dialog =
-                new AlertDialog.Builder(this)
-                        .setView(view)
-                        .create();
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(view)
+                .create();
 
         dialog.show();
 
@@ -172,7 +197,6 @@ public class ProfilActivity extends AppCompatActivity {
                 });
 
         view.findViewById(R.id.btnBatalPassword)
-                .setOnClickListener(v ->
-                        dialog.dismiss());
+                .setOnClickListener(v -> dialog.dismiss());
     }
 }

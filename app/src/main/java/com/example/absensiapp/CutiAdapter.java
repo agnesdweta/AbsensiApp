@@ -15,7 +15,6 @@ import java.util.List;
 
 public class CutiAdapter extends RecyclerView.Adapter<CutiAdapter.ViewHolder> {
 
-    // ================= INTERFACE ADMIN =================
     public interface OnAction {
         void onApprove(CutiModel c);
         void onReject(CutiModel c);
@@ -25,7 +24,6 @@ public class CutiAdapter extends RecyclerView.Adapter<CutiAdapter.ViewHolder> {
     OnAction listener;
     boolean isAdmin;
 
-    // ================= CONSTRUCTOR =================
     public CutiAdapter(List<CutiModel> list, OnAction listener, boolean isAdmin) {
         this.list = list;
         this.listener = listener;
@@ -47,19 +45,23 @@ public class CutiAdapter extends RecyclerView.Adapter<CutiAdapter.ViewHolder> {
 
         CutiModel data = list.get(position);
 
-        // ================= SET DATA =================
-        holder.tvNama.setText(data.getNama());
+        // ================= SAFETY NULL =================
+        String nama = data.getNama() != null ? data.getNama() : "-";
+        String mulai = data.getMulai() != null ? data.getMulai() : "-";
+        String selesai = data.getSelesai() != null ? data.getSelesai() : "-";
+        String alasan = data.getAlasan() != null ? data.getAlasan() : "-";
+        String statusRaw = data.getStatus();
 
-        holder.tvTanggal.setText(
-                data.getMulai() + " - " + data.getSelesai()
-        );
+        if (statusRaw == null || statusRaw.isEmpty()) {
+            statusRaw = "pending";
+        }
 
-        holder.tvAlasan.setText(data.getAlasan());
+        String status = statusRaw.toLowerCase();
 
-        String status = data.getStatus() != null
-                ? data.getStatus().toLowerCase()
-                : "pending";
-
+        // ================= SET TEXT =================
+        holder.tvNama.setText(nama);
+        holder.tvTanggal.setText(mulai + " - " + selesai);
+        holder.tvAlasan.setText(alasan);
         holder.tvStatus.setText(status.toUpperCase());
 
         // ================= WARNA STATUS =================
@@ -82,10 +84,9 @@ public class CutiAdapter extends RecyclerView.Adapter<CutiAdapter.ViewHolder> {
                 break;
         }
 
-        // ================= MODE ADMIN =================
+        // ================= ADMIN MODE =================
         if (isAdmin) {
 
-            // tombol hanya tampil jika pending
             if (status.equals("pending")) {
 
                 holder.btnApprove.setVisibility(View.VISIBLE);
@@ -98,21 +99,14 @@ public class CutiAdapter extends RecyclerView.Adapter<CutiAdapter.ViewHolder> {
             }
 
             holder.btnApprove.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onApprove(data);
-                }
+                if (listener != null) listener.onApprove(data);
             });
 
             holder.btnReject.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onReject(data);
-                }
+                if (listener != null) listener.onReject(data);
             });
 
-        }
-
-        // ================= MODE USER =================
-        else {
+        } else {
 
             holder.btnApprove.setVisibility(View.GONE);
             holder.btnReject.setVisibility(View.GONE);
@@ -121,10 +115,9 @@ public class CutiAdapter extends RecyclerView.Adapter<CutiAdapter.ViewHolder> {
 
     @Override
     public int getItemCount() {
-        return list.size();
+        return list != null ? list.size() : 0;
     }
 
-    // ================= VIEWHOLDER =================
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView tvNama, tvTanggal, tvAlasan, tvStatus;

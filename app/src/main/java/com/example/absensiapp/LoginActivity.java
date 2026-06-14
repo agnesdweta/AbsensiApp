@@ -1,6 +1,7 @@
 package com.example.absensiapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -24,6 +25,8 @@ public class LoginActivity extends AppCompatActivity {
     TextInputEditText etUsername, etPassword;
     MaterialButton btnLogin;
 
+    SharedPreferences sharedPreferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +35,8 @@ public class LoginActivity extends AppCompatActivity {
         etUsername = findViewById(R.id.etUsername);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
+
+        sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
 
         btnLogin.setOnClickListener(v -> loginUser());
     }
@@ -46,74 +51,84 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // GANTI jika pakai HP asli
         String url = "http://10.0.2.2/absensi/public/api/login";
 
-        StringRequest request = new StringRequest(Request.Method.POST, url,
+        StringRequest request = new StringRequest(
+                Request.Method.POST,
+                url,
                 response -> {
 
                     try {
+
                         Log.d("LOGIN_RESPONSE", response);
 
                         JSONObject obj = new JSONObject(response);
 
-                        boolean status = obj.getBoolean("status");
+                        boolean status = obj.optBoolean("status", false);
 
-                        if (status) {
-
-                            if (!obj.isNull("data")) {
-
-                                JSONObject data = obj.getJSONObject("data");
-
-                                String role = data.getString("role").trim().toLowerCase();
-                                String usernameResult = data.getString("username");
-
-                                Toast.makeText(this, "Login berhasil", Toast.LENGTH_SHORT).show();
-
-                                Intent intent;
-
-                                if (role.equals("admin")) {
-                                    intent = new Intent(this, AdminDashboardActivity.class);
-                                } else {
-                                    intent = new Intent(this, MainActivity.class);
-                                }
-
-                                intent.putExtra("username", usernameResult);
-                                startActivity(intent);
-                                finish();
-
-                            } else {
-                                Toast.makeText(this, "Data kosong dari server", Toast.LENGTH_SHORT).show();
-                            }
-
-                        } else {
+                        if (!status) {
                             Toast.makeText(this,
                                     obj.optString("message", "Login gagal"),
                                     Toast.LENGTH_SHORT).show();
+                            return;
                         }
+
+                        JSONObject data = obj.getJSONObject("data");
+
+                        String idUser = data.optString("id_user", "");
+                        String idKaryawan = data.optString("id_karyawan", "");
+                        String nama = data.optString("nama", "");
+                        String role = data.optString("role", "");
+
+                        if (idUser.isEmpty()) {
+                            Toast.makeText(this,
+                                    "Login gagal: data user kosong",
+                                    Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        // ================= SAVE USER =================
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+                        editor.putString("id_user", idUser);
+                        editor.putString("id_karyawan", idKaryawan);
+                        editor.putString("nama", nama);
+                        editor.putString("role", role);
+
+                        // ================= RESET ABSENSI CACHE =================
+                        editor.remove("jam_masuk");
+                        editor.remove("jam_pulang");
+                        editor.remove("status_absen");
+
+                        editor.apply();
+
+                        Toast.makeText(this, "Login berhasil", Toast.LENGTH_SHORT).show();
+
+                        Intent intent;
+
+                        if ("admin".equalsIgnoreCase(role)) {
+                            intent = new Intent(this, AdminDashboardActivity.class);
+                        } else {
+                            intent = new Intent(this, MainActivity.class);
+                        }
+
+                        startActivity(intent);
+                        finish();
 
                     } catch (Exception e) {
                         Toast.makeText(this,
-                                "Error JSON: " + e.getMessage(),
+                                "JSON ERROR: " + e.getMessage(),
                                 Toast.LENGTH_LONG).show();
-
-                        Log.e("LOGIN_ERROR", e.toString());
                     }
 
                 },
                 error -> {
-                    error.printStackTrace();
-                    Log.e("VOLLEY_ERROR", error.toString());
 
-                    if (error.networkResponse != null) {
-                        Toast.makeText(this,
-                                "HTTP ERROR: " + error.networkResponse.statusCode,
-                                Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(this,
-                                "Server tidak bisa diakses",
-                                Toast.LENGTH_LONG).show();
-                    }
+                    error.printStackTrace();
+
+                    Toast.makeText(this,
+                            "Server error / tidak bisa diakses",
+                            Toast.LENGTH_LONG).show();
                 }
         ) {
 
@@ -124,15 +139,9 @@ public class LoginActivity extends AppCompatActivity {
                 params.put("password", password);
                 return params;
             }
-
-            // ✅ FIX: header penting untuk backend PHP / CI
-            @Override
-            public Map<String, String> getHeaders() {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("Content-Type", "application/x-www-form-urlencoded");
-                return headers;
-            }
         };
+
+        request.setShouldCache(false); // 🔥 ANTI CACHE WAJIB
 
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(request);

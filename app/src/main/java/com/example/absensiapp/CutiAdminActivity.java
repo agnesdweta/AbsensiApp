@@ -23,14 +23,15 @@ import java.util.Map;
 public class CutiAdminActivity extends AppCompatActivity {
 
     RecyclerView rvCuti;
-    ImageView btnBack; // 🔥 TAMBAH INI
+    ImageView btnBack;
 
     ArrayList<CutiModel> list = new ArrayList<>();
     CutiAdapter adapter;
     RequestQueue queue;
 
-    private static final String URL =
-            "http://10.0.2.2/absensi/public/api/cuti/riwayat";
+    // 🔥 FIX URL (HARUS SESUAI BACKEND list)
+    private static final String URL_LIST =
+            "http://10.0.2.2/absensi/public/api/cuti/list";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,10 +39,8 @@ public class CutiAdminActivity extends AppCompatActivity {
         setContentView(R.layout.activity_cuti_admin);
 
         rvCuti = findViewById(R.id.rvCuti);
+        btnBack = findViewById(R.id.btnBack);
 
-        btnBack = findViewById(R.id.btnBack); // 🔥 TAMBAH INI
-
-        // 🔥 BUTTON KEMBALI
         btnBack.setOnClickListener(v -> finish());
 
         queue = Volley.newRequestQueue(this);
@@ -51,12 +50,12 @@ public class CutiAdminActivity extends AppCompatActivity {
         adapter = new CutiAdapter(list, new CutiAdapter.OnAction() {
             @Override
             public void onApprove(CutiModel c) {
-                updateStatus(c.getId(), "Disetujui");
+                updateStatus(c.getId(), "DISETUJUI");
             }
 
             @Override
             public void onReject(CutiModel c) {
-                updateStatus(c.getId(), "Ditolak");
+                updateStatus(c.getId(), "DITOLAK");
             }
         }, true);
 
@@ -65,17 +64,37 @@ public class CutiAdminActivity extends AppCompatActivity {
         loadData();
     }
 
+    // ================= LOAD DATA CUTI =================
     private void loadData() {
 
-        StringRequest request = new StringRequest(Request.Method.GET, URL,
+        StringRequest request = new StringRequest(
+                Request.Method.GET,
+                URL_LIST,
                 response -> {
 
                     try {
 
-                        list.clear();
-
                         JSONObject obj = new JSONObject(response);
-                        JSONArray arr = obj.getJSONArray("data");
+
+                        boolean status = obj.optBoolean("status", false);
+
+                        if (!status) {
+                            Toast.makeText(this,
+                                    obj.optString("message", "Gagal"),
+                                    Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        JSONArray arr = obj.optJSONArray("data");
+
+                        if (arr == null) {
+                            Toast.makeText(this,
+                                    "DATA NULL",
+                                    Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        list.clear();
 
                         for (int i = 0; i < arr.length(); i++) {
 
@@ -83,7 +102,7 @@ public class CutiAdminActivity extends AppCompatActivity {
 
                             list.add(new CutiModel(
                                     o.optString("id"),
-                                    o.optString("nama_karyawan"),
+                                    o.optString("id_karyawan"),
                                     o.optString("tanggal_mulai"),
                                     o.optString("tanggal_selesai"),
                                     o.optString("keterangan"),
@@ -95,44 +114,65 @@ public class CutiAdminActivity extends AppCompatActivity {
 
                     } catch (Exception e) {
                         Toast.makeText(this,
-                                "Parse Error: " + e.getMessage(),
+                                "JSON ERROR: " + e.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
 
                 },
-                error -> Toast.makeText(this,
-                        "Gagal load data",
-                        Toast.LENGTH_SHORT).show()
+                error -> {
+                    error.printStackTrace();
+                    Toast.makeText(this,
+                            "NETWORK ERROR: " + error.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                }
         );
 
         queue.add(request);
     }
 
+    // ================= UPDATE STATUS CUTI ================
     private void updateStatus(String id, String status) {
 
-        String url =
-                "http://10.0.2.2/absensi/public/api/cuti/update/" + id;
+        // 🔥 FIX ROUTE SESUAI PHP
+        String url = "http://10.0.2.2/absensi/public/api/cuti/updateStatus";
 
-        StringRequest request = new StringRequest(Request.Method.POST,
+        StringRequest request = new StringRequest(
+                Request.Method.POST,
                 url,
                 response -> {
-                    Toast.makeText(this,
-                            "Status berhasil diupdate",
-                            Toast.LENGTH_SHORT).show();
 
-                    loadData();
+                    try {
+                        JSONObject obj = new JSONObject(response);
+
+                        boolean success = obj.optBoolean("status", false);
+                        String msg = obj.optString("message", "OK");
+
+                        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+
+                        if (success) {
+                            loadData(); // refresh
+                        }
+
+                    } catch (Exception e) {
+                        Toast.makeText(this,
+                                "Response error",
+                                Toast.LENGTH_SHORT).show();
+                    }
+
                 },
                 error -> Toast.makeText(this,
-                        "Gagal update status",
+                        "Server Error",
                         Toast.LENGTH_SHORT).show()
         ) {
+
             @Override
             protected Map<String, String> getParams() {
 
-                Map<String, String> params = new HashMap<>();
-                params.put("status", status);
+                Map<String, String> p = new HashMap<>();
+                p.put("id", id);
+                p.put("status", status); // DISETUJUI / DITOLAK
 
-                return params;
+                return p;
             }
         };
 

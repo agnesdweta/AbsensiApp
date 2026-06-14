@@ -56,18 +56,38 @@ public class AbsensiAdapter
                 "Tanggal : " + data.getTanggal()
         );
 
+        String jamMasuk = data.getJamMasuk();
+        String jamKeluar = data.getJamKeluar();
+
+        if (jamMasuk == null ||
+                jamMasuk.equals("null")) {
+            jamMasuk = "-";
+        }
+
+        if (jamKeluar == null ||
+                jamKeluar.equals("null") ||
+                jamKeluar.isEmpty()) {
+            jamKeluar = "-";
+        }
+
         holder.tvJam.setText(
-                data.getJamMasuk()
-                        + " - "
-                        + data.getJamKeluar()
+                "Jam : " + jamMasuk + " - " + jamKeluar
+        );
+
+        holder.tvStatus.setText(
+                "Status : " + data.getStatus()
         );
 
         holder.btnEdit.setOnClickListener(v -> {
-            listener.onEdit(data);
+            if (listener != null) {
+                listener.onEdit(data);
+            }
         });
 
         holder.btnDelete.setOnClickListener(v -> {
-            listener.onDelete(data);
+            if (listener != null) {
+                listener.onDelete(data);
+            }
         });
     }
 
@@ -79,12 +99,13 @@ public class AbsensiAdapter
     public static class ViewHolder
             extends RecyclerView.ViewHolder {
 
-        TextView tvNama,
-                tvTanggal,
-                tvJam;
+        TextView tvNama;
+        TextView tvTanggal;
+        TextView tvJam;
+        TextView tvStatus;
 
-        ImageView btnEdit,
-                btnDelete;
+        ImageView btnEdit;
+        ImageView btnDelete;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -92,6 +113,7 @@ public class AbsensiAdapter
             tvNama = itemView.findViewById(R.id.tvNama);
             tvTanggal = itemView.findViewById(R.id.tvTanggal);
             tvJam = itemView.findViewById(R.id.tvJam);
+            tvStatus = itemView.findViewById(R.id.tvStatus);
 
             btnEdit = itemView.findViewById(R.id.btnEdit);
             btnDelete = itemView.findViewById(R.id.btnDelete);
