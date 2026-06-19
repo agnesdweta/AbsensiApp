@@ -49,80 +49,74 @@ public class RiwayatCutiActivity extends AppCompatActivity {
     }
 
     private void loadData() {
-
         SharedPreferences sp = getSharedPreferences("user", MODE_PRIVATE);
 
-        String id_karyawan = sp.getString("id_karyawan", "");
+        String id_karyawan = sp.getString("id", "");
         String role = sp.getString("role", "");
 
-        Log.d("RIWAYAT_DEBUG", "id_karyawan = " + id_karyawan);
-        Log.d("RIWAYAT_DEBUG", "role = " + role);
+        Log.d("RIWAYAT_DEBUG", "id_karyawan login = " + id_karyawan);
+        Log.d("RIWAYAT_DEBUG", "role login = " + role);
 
         if (id_karyawan.isEmpty()) {
-            Toast.makeText(this, "User belum login", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "User belum login atau ID kosong", Toast.LENGTH_LONG).show();
             return;
         }
 
-        String url = "http://10.0.2.2/absensi/public/api/cuti/riwayat"
-                + "?id_karyawan=" + id_karyawan
-                + "&role=" + role;
-
-        StringRequest request = new StringRequest(Request.Method.GET, url,
+        StringRequest request = new StringRequest(Request.Method.GET, URL,
                 response -> {
-
                     try {
-
                         Log.d("RIWAYAT_RESPONSE", response);
-
                         JSONObject obj = new JSONObject(response);
 
-                        if (!obj.getBoolean("status")) {
+                        String statusResponse = obj.optString("status", "");
+                        if (!statusResponse.equalsIgnoreCase("success")) {
                             Toast.makeText(this,
-                                    obj.getString("message"),
+                                    obj.optString("message", "Gagal memuat riwayat cuti"),
                                     Toast.LENGTH_LONG).show();
                             return;
                         }
 
                         JSONArray arr = obj.getJSONArray("data");
-
                         list.clear();
 
                         for (int i = 0; i < arr.length(); i++) {
-
                             JSONObject item = arr.getJSONObject(i);
 
-                            list.add(new CutiModel(
-                                    item.optString("id"),
-                                    item.optString("id_karyawan"),
-                                    item.optString("tanggal_mulai"),
-                                    item.optString("tanggal_selesai"),
-                                    item.optString("keterangan"),
-                                    item.optString("status")
-                            ));
+                            String karyawanIdFromServer = item.optString("id_karyawan", "");
+
+                            if (karyawanIdFromServer.equals(id_karyawan)) {
+                                list.add(new CutiModel(
+                                        item.optString("id"),
+                                        karyawanIdFromServer,
+                                        item.optString("tanggal_mulai"),
+                                        item.optString("tanggal_selesai"),
+                                        item.optString("keterangan"),
+                                        item.optString("status")
+                                ));
+                            }
                         }
 
                         adapter.notifyDataSetChanged();
 
+                        if (list.isEmpty()) {
+                            Toast.makeText(this, "Tidak ada riwayat cuti untuk Anda", Toast.LENGTH_SHORT).show();
+                        }
+
                     } catch (Exception e) {
-
-                        Toast.makeText(this,
-                                "Parse Error: " + e.getMessage(),
-                                Toast.LENGTH_LONG).show();
+                        Log.e("RIWAYAT_DEBUG", "Parsing JSON Error: ", e);
+                        Toast.makeText(this, "Parse Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
-
                 },
                 error -> {
-
                     String msg = "Gagal load data";
-
                     if (error.networkResponse != null) {
                         msg = "HTTP CODE: " + error.networkResponse.statusCode;
                     }
-
+                    Log.e("RIWAYAT_DEBUG", "Network Error: ", error);
                     Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
                 }
         );
 
-        Volley.newRequestQueue(this).add(request);
+        Volley.newRequestQueue(getApplicationContext()).add(request);
     }
 }
