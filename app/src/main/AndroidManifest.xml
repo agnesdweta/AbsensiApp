@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -20,14 +26,15 @@
             android:exported="false" />
         <activity
             android:name=".CutiActivity"
-            android:exported="false" /> <!-- ABSEN -->
+            android:exported="false" />
         <activity android:name=".CutiAdminActivity"/>
         <activity
             android:name=".AbsenActivity"
-            android:exported="false" /> <!-- DASHBOARD (HARUS BISA DIBUKA SETELAH LOGIN) -->
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
-            android:exported="true" /> <!-- LOGIN (HALAMAN AWAL) -->
+            android:exported="true" />
         <activity
             android:name=".RiwayatCutiActivity"
             android:exported="false" />

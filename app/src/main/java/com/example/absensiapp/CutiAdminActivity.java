@@ -1,6 +1,7 @@
 package com.example.absensiapp;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -29,9 +30,7 @@ public class CutiAdminActivity extends AppCompatActivity {
     CutiAdapter adapter;
     RequestQueue queue;
 
-    // 🔥 FIX URL (HARUS SESUAI BACKEND list)
-    private static final String URL_LIST =
-            "http://10.0.2.2/absensi/public/api/cuti/list";
+    private static final String URL_LIST = "http://10.0.2.2/absensi/public/api/cuti/riwayat";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +42,7 @@ public class CutiAdminActivity extends AppCompatActivity {
 
         btnBack.setOnClickListener(v -> finish());
 
-        queue = Volley.newRequestQueue(this);
-
+        queue = Volley.newRequestQueue(getApplicationContext());
         rvCuti.setLayoutManager(new LinearLayoutManager(this));
 
         adapter = new CutiAdapter(list, new CutiAdapter.OnAction() {
@@ -66,40 +64,29 @@ public class CutiAdminActivity extends AppCompatActivity {
 
     // ================= LOAD DATA CUTI =================
     private void loadData() {
-
         StringRequest request = new StringRequest(
                 Request.Method.GET,
                 URL_LIST,
                 response -> {
-
                     try {
-
+                        Log.d("CUTI_ADMIN_DEBUG", response);
                         JSONObject obj = new JSONObject(response);
 
-                        boolean status = obj.optBoolean("status", false);
-
-                        if (!status) {
-                            Toast.makeText(this,
-                                    obj.optString("message", "Gagal"),
-                                    Toast.LENGTH_SHORT).show();
+                        String statusResponse = obj.optString("status", "");
+                        if (!statusResponse.equalsIgnoreCase("success")) {
+                            Toast.makeText(this, obj.optString("message", "Gagal memuat data"), Toast.LENGTH_SHORT).show();
                             return;
                         }
 
                         JSONArray arr = obj.optJSONArray("data");
-
                         if (arr == null) {
-                            Toast.makeText(this,
-                                    "DATA NULL",
-                                    Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "DATA KOSONG", Toast.LENGTH_SHORT).show();
                             return;
                         }
 
                         list.clear();
-
                         for (int i = 0; i < arr.length(); i++) {
-
                             JSONObject o = arr.getJSONObject(i);
-
                             list.add(new CutiModel(
                                     o.optString("id"),
                                     o.optString("id_karyawan"),
@@ -113,18 +100,10 @@ public class CutiAdminActivity extends AppCompatActivity {
                         adapter.notifyDataSetChanged();
 
                     } catch (Exception e) {
-                        Toast.makeText(this,
-                                "JSON ERROR: " + e.getMessage(),
-                                Toast.LENGTH_LONG).show();
+                        Log.e("CUTI_ADMIN_DEBUG", "JSON Error: ", e);
                     }
-
                 },
-                error -> {
-                    error.printStackTrace();
-                    Toast.makeText(this,
-                            "NETWORK ERROR: " + error.getMessage(),
-                            Toast.LENGTH_LONG).show();
-                }
+                error -> Toast.makeText(this, "Gagal terhubung ke server", Toast.LENGTH_SHORT).show()
         );
 
         queue.add(request);
@@ -132,46 +111,33 @@ public class CutiAdminActivity extends AppCompatActivity {
 
     // ================= UPDATE STATUS CUTI ================
     private void updateStatus(String id, String status) {
-
-        // 🔥 FIX ROUTE SESUAI PHP
-        String url = "http://10.0.2.2/absensi/public/api/cuti/updateStatus";
+        String url = "http://10.0.2.2/absensi/public/api/cuti/update/" + id;
 
         StringRequest request = new StringRequest(
                 Request.Method.POST,
                 url,
                 response -> {
-
                     try {
+                        Log.d("CUTI_ADMIN_DEBUG", response);
                         JSONObject obj = new JSONObject(response);
-
-                        boolean success = obj.optBoolean("status", false);
-                        String msg = obj.optString("message", "OK");
+                        String statusResponse = obj.optString("status", "");
+                        String msg = obj.optString("message", "Berhasil memperbarui status");
 
                         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 
-                        if (success) {
-                            loadData(); // refresh
+                        if (statusResponse.equalsIgnoreCase("success") || statusResponse.equalsIgnoreCase("true")) {
+                            loadData();
                         }
-
                     } catch (Exception e) {
-                        Toast.makeText(this,
-                                "Response error",
-                                Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Gagal memproses respon server", Toast.LENGTH_SHORT).show();
                     }
-
                 },
-                error -> Toast.makeText(this,
-                        "Server Error",
-                        Toast.LENGTH_SHORT).show()
+                error -> Toast.makeText(this, "Gagal mengubah status", Toast.LENGTH_SHORT).show()
         ) {
-
             @Override
             protected Map<String, String> getParams() {
-
                 Map<String, String> p = new HashMap<>();
-                p.put("id", id);
-                p.put("status", status); // DISETUJUI / DITOLAK
-
+                p.put("status", status);
                 return p;
             }
         };

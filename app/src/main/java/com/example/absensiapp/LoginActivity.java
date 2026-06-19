@@ -60,7 +60,7 @@ public class LoginActivity extends AppCompatActivity {
 
                     try {
 
-                        Log.d("LOGIN_RESPONSE", response);
+                        Log.d("LOGIN_DEBUG", response);
 
                         JSONObject obj = new JSONObject(response);
 
@@ -74,13 +74,15 @@ public class LoginActivity extends AppCompatActivity {
                         }
 
                         JSONObject data = obj.getJSONObject("data");
+                        Log.d("LOGIN_DEBUG", String.valueOf(data));
 
-                        String idUser = data.optString("id_user", "");
-                        String idKaryawan = data.optString("id_karyawan", "");
+                        String id = data.optString("id", "");
+                        String idUser = data.optString("id", "");
+                        String idKaryawan = data.optString("id", "");
                         String nama = data.optString("nama", "");
                         String role = data.optString("role", "");
 
-                        if (idUser.isEmpty()) {
+                        if (id.isEmpty()) {
                             Toast.makeText(this,
                                     "Login gagal: data user kosong",
                                     Toast.LENGTH_LONG).show();
@@ -90,6 +92,7 @@ public class LoginActivity extends AppCompatActivity {
                         // ================= SAVE USER =================
                         SharedPreferences.Editor editor = sharedPreferences.edit();
 
+                        editor.putString("id", id);
                         editor.putString("id_user", idUser);
                         editor.putString("id_karyawan", idKaryawan);
                         editor.putString("nama", nama);
@@ -141,7 +144,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
 
-        request.setShouldCache(false); // 🔥 ANTI CACHE WAJIB
+        request.setShouldCache(false);
 
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(request);
