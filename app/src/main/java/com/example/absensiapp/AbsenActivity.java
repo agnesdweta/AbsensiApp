@@ -52,14 +52,13 @@ public class AbsenActivity extends AppCompatActivity {
     private MaterialButton btnMasuk, btnKeluar;
     private TextView tvStatus, tvJamMasuk;
     private ImageView btnBack;
+    private ImageView imgAbsen;
 
     private RequestQueue queue;
     private SharedPreferences sharedPreferences;
-
     private boolean cameraForCheckIn = true;
     private double currentLatitude = 0.0;
     private double currentLongitude = 0.0;
-
     private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -74,7 +73,7 @@ public class AbsenActivity extends AppCompatActivity {
                             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                             imageBitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
                             byte[] byteArray = byteArrayOutputStream.toByteArray();
-                            String encodedImage = Base64.encodeToString(byteArray, Base64.DEFAULT);
+                            String encodedImage = Base64.encodeToString(byteArray, Base64.NO_WRAP);
 
                             if (cameraForCheckIn) {
                                 absenMasuk(currentLatitude, currentLongitude, encodedImage);
@@ -105,6 +104,7 @@ public class AbsenActivity extends AppCompatActivity {
         tvJamMasuk = findViewById(R.id.tvJamMasuk);
 
         btnBack = findViewById(R.id.btnBack);
+        imgAbsen = findViewById(R.id.imgAbsen);
 
         queue = Volley.newRequestQueue(this);
         sharedPreferences = getSharedPreferences("user", MODE_PRIVATE);
@@ -140,114 +140,99 @@ public class AbsenActivity extends AppCompatActivity {
     // ================= LOAD STATUS =================
     private void loadStatus() {
 
-        String idKaryawan = getIdKaryawan();
-        if (idKaryawan == null) return;
-        String url = "http://10.0.2.2/absensi/public/api/absensi";
+            String idKaryawan = getIdKaryawan();
+            if (idKaryawan == null) return;
 
-        StringRequest request = new StringRequest(
-                Request.Method.GET,
-                url,
-                response -> {
-                    try {
-                        Log.d("ABSEN_DEBUG", "loadStatus Response: " + response);
-                        org.json.JSONArray array = new org.json.JSONArray(response);
+            String url =
+                    "http://10.0.2.2/absensi/public/api/absen/status?id_karyawan=" + idKaryawan;
 
-                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
-                        String todayDate = sdf.format(new java.util.Date());
+            StringRequest request = new StringRequest(
+                    Request.Method.GET,
+                    url,
+                    response -> {
+                        try {
 
-                        String statusAbsen = "BELUM ABSEN";
-                        String jamMasuk = "--:--:--";
-                        String jamPulang = "--:--:--";
+                            Log.d("ABSEN_DEBUG", "loadStatus Response: " + response);
 
-                        for (int i = 0; i < array.length(); i++) {
-                            JSONObject obj = array.getJSONObject(i);
-                            String empId = obj.optString("id_karyawan", "");
-                            String dateStr = obj.optString("tanggal", "");
+                            // ================= PARSE JSON (OBJECT, BUKAN ARRAY) =================
+                            JSONObject responseObj = new JSONObject(response);
+                            JSONObject data = responseObj.getJSONObject("data");
 
-                            if (empId.equals(idKaryawan) && dateStr.equals(todayDate)) {
-                                jamMasuk = obj.optString("jam_masuk", "--:--:--");
-                                jamPulang = obj.optString("jam_pulang", "--:--:--");
-                                statusAbsen = obj.optString("status", "HADIR");
+                            String statusAbsen = data.optString("status_absen", "BELUM ABSEN");
+                            String jamMasuk = data.optString("jam_masuk", "--:--:--");
+                            String jamPulang = data.optString("jam_pulang", "--:--:--");
+                            String foto = data.optString("foto", "");
 
-                                if (jamPulang != null && !jamPulang.isEmpty() && !jamPulang.equals("null") && !jamPulang.equals("--:--:--")) {
-                                    statusAbsen = "PULANG";
-                                } else {
-                                    try {
-                                        String[] parts = jamMasuk.split(":");
-                                        if (parts.length >= 2) {
-                                            int h = Integer.parseInt(parts[0]);
-                                            int m = Integer.parseInt(parts[1]);
-                                            if (h < OFFICE_START_HOUR || (h == OFFICE_START_HOUR && m <= OFFICE_START_GRACE_MINUTE)) {
-                                                statusAbsen = "On Time";
-                                            } else {
-                                                statusAbsen = "Late";
-                                            }
-                                        }
-                                    } catch (Exception e) {
-                                        // fallback to status from response
-                                    }
-                                }
-                                break;
+                            // ================= SET STATUS =================
+                            tvStatus.setText("STATUS: " + statusAbsen);
+
+                            if (statusAbsen.equalsIgnoreCase("BELUM ABSEN")) {
+
+                                tvStatus.setBackgroundColor(
+                                        getResources().getColor(android.R.color.holo_red_dark)
+                                );
+                                tvJamMasuk.setText("Belum absen hari ini");
+
+                                imgAbsen.setImageDrawable(null);
+
+                            } else if (statusAbsen.equalsIgnoreCase("HADIR")) {
+
+                                tvStatus.setBackgroundColor(
+                                        getResources().getColor(android.R.color.holo_green_dark)
+                                );
+                                tvJamMasuk.setText("Jam Masuk: " + jamMasuk);
+
+                            } else if (statusAbsen.equalsIgnoreCase("PULANG")) {
+
+                                tvStatus.setBackgroundColor(
+                                        getResources().getColor(android.R.color.holo_blue_dark)
+                                );
+                                tvJamMasuk.setText("Jam Kerja: " + jamMasuk + " - " + jamPulang);
                             }
+
+                            // ================= LOAD FOTO (GLIDE) =================
+                            if (foto != null && !foto.isEmpty()) {
+
+                                String imageUrl =
+                                        "http://10.0.2.2/absensi/public/uploads/" + foto;
+
+                                Log.d("ABSEN_DEBUG", "FOTO URL: " + imageUrl);
+
+                                com.bumptech.glide.Glide.with(this)
+                                        .load(imageUrl)
+                                        .placeholder(android.R.drawable.ic_menu_gallery)
+                                        .error(android.R.drawable.ic_delete)
+                                        .into(imgAbsen);
+
+                            } else {
+                                imgAbsen.setImageDrawable(null);
+                            }
+
+                        } catch (Exception e) {
+                            Log.e("ABSEN_DEBUG", "loadStatus JSON Error: ", e);
+                            Toast.makeText(this,
+                                    "Error JSON: " + e.getMessage(),
+                                    Toast.LENGTH_SHORT).show();
                         }
-
-                        tvStatus.setText("STATUS: " + statusAbsen);
-
-                        if (statusAbsen.equalsIgnoreCase("BELUM ABSEN")) {
-
-                            tvStatus.setBackgroundColor(
-                                    getResources().getColor(android.R.color.holo_red_dark)
-                            );
-                            tvJamMasuk.setText("Belum absen hari ini");
-
-                        } else if (statusAbsen.equalsIgnoreCase("HADIR") || statusAbsen.equalsIgnoreCase("On Time")) {
-
-                            tvStatus.setBackgroundColor(
-                                    getResources().getColor(android.R.color.holo_green_dark)
-                            );
-                            tvJamMasuk.setText("Jam Masuk: " + jamMasuk);
-
-                        } else if (statusAbsen.equalsIgnoreCase("Late")) {
-
-                            tvStatus.setBackgroundColor(
-                                    getResources().getColor(android.R.color.holo_orange_dark)
-                            );
-                            tvJamMasuk.setText("Jam Masuk: " + jamMasuk + " (Terlambat)");
-
-                        } else {
-
-                            tvStatus.setBackgroundColor(
-                                    getResources().getColor(android.R.color.holo_blue_dark)
-                            );
-                            tvJamMasuk.setText("Jam Kerja: " + jamMasuk + " - " + jamPulang);
-                        }
-
-                    } catch (Exception e) {
-                        Log.e("ABSEN_DEBUG", "loadStatus JSON Error: ", e);
-                        e.printStackTrace();
-                        Toast.makeText(this, "Error JSON: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
+                    },
+                    error -> {
+                        Log.e("ABSEN_DEBUG", "loadStatus Network Error: ", error);
+                        Toast.makeText(this, "Gagal ambil status", Toast.LENGTH_SHORT).show();
                     }
-                },
-                error -> {
-                    Log.e("ABSEN_DEBUG", "loadStatus Network Error: ", error);
-                    Toast.makeText(this, "Gagal ambil status", Toast.LENGTH_SHORT).show();
-                }
-        );
+            );
 
-        queue.add(request);
-    }
-
+            queue.add(request);
+        }
     // ================= ABSEN MASUK =================
+
     private void absenMasuk(final double lat, final double lng, final String photoBase64) {
+
         String idKaryawan = getIdKaryawan();
         if (idKaryawan == null) return;
-
         // Check-In time validation (09:00 AM start time + 10 mins grace period = 09:10 AM)
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int minute = calendar.get(Calendar.MINUTE);
-
         final String checkInStatus;
         if (hour < OFFICE_START_HOUR || (hour == OFFICE_START_HOUR && minute <= OFFICE_START_GRACE_MINUTE)) {
             checkInStatus = "On Time";
@@ -267,7 +252,6 @@ public class AbsenActivity extends AppCompatActivity {
 
                         boolean status = obj.optString("status", "").equalsIgnoreCase("success") || obj.optBoolean("status", false);
                         String message = obj.getString("message");
-
                         Toast.makeText(this, message + " (" + checkInStatus + ")", Toast.LENGTH_SHORT).show();
 
                         if (status) {
@@ -349,24 +333,33 @@ public class AbsenActivity extends AppCompatActivity {
 
         queue.add(request);
     }
-
     // ================= GEOLOCATION & CAMERA FLOW =================
     private void checkPermissionAndStartFlow(boolean isCheckIn) {
-        cameraForCheckIn = isCheckIn;
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            ActivityCompat.requestPermissions(this,
+        cameraForCheckIn = isCheckIn;
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED ||
+
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED ||
+
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(
+                    this,
                     new String[]{
+                            Manifest.permission.CAMERA,
                             Manifest.permission.ACCESS_FINE_LOCATION,
                             Manifest.permission.ACCESS_COARSE_LOCATION
                     },
                     PERMISSION_REQUEST_CODE);
+
         } else {
             retrieveLocationAndValidate();
         }
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -400,7 +393,6 @@ public class AbsenActivity extends AppCompatActivity {
             Toast.makeText(this, "Harap aktifkan GPS / Layanan Lokasi Anda", Toast.LENGTH_LONG).show();
             return;
         }
-
         try {
             Location bestLocation = null;
             if (isGpsEnabled) {
@@ -420,9 +412,18 @@ public class AbsenActivity extends AppCompatActivity {
                     public void onLocationChanged(@NonNull Location location) {
                         validateGeofenceAndOpenCamera(location);
                     }
-                    @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
-                    @Override public void onProviderEnabled(@NonNull String provider) {}
-                    @Override public void onProviderDisabled(@NonNull String provider) {}
+
+                    @Override
+                    public void onStatusChanged(String provider, int status, Bundle extras) {
+                    }
+
+                    @Override
+                    public void onProviderEnabled(@NonNull String provider) {
+                    }
+
+                    @Override
+                    public void onProviderDisabled(@NonNull String provider) {
+                    }
                 }, null);
             }
         } catch (SecurityException e) {
@@ -430,11 +431,9 @@ public class AbsenActivity extends AppCompatActivity {
             Toast.makeText(this, "Izin lokasi tidak diberikan", Toast.LENGTH_SHORT).show();
         }
     }
-
     private void validateGeofenceAndOpenCamera(Location location) {
         currentLatitude = location.getLatitude();
         currentLongitude = location.getLongitude();
-
         Log.d("ABSEN_DEBUG", "Current Location: " + currentLatitude + ", " + currentLongitude);
 
         float[] results = new float[1];
@@ -450,13 +449,19 @@ public class AbsenActivity extends AppCompatActivity {
             openFrontCamera();
         }
     }
-
     private void openFrontCamera() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            cameraLauncher.launch(takePictureIntent);
+
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        Log.d("ABSEN_DEBUG",
+                "Camera App = " + intent.resolveActivity(getPackageManager()));
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            cameraLauncher.launch(intent);
         } else {
-            Toast.makeText(this, "Kamera tidak ditemukan di perangkat ini", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,
+                    "Camera App Tidak Ditemukan",
+                    Toast.LENGTH_LONG).show();
         }
     }
 }

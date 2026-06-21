@@ -98,6 +98,13 @@
                 android:textStyle="bold"
                 android:textColor="#444"
                 android:layout_marginBottom="24dp"/>
+            <ImageView
+                android:id="@+id/imgAbsen"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_marginTop="16dp"
+                android:scaleType="centerCrop"
+                android:background="#E5E7EB"/>
 
             <!-- BUTTON ABSEN MASUK -->
             <com.google.android.material.button.MaterialButton
