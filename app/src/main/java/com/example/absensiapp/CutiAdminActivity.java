@@ -64,17 +64,27 @@ public class CutiAdminActivity extends AppCompatActivity {
 
     // ================= LOAD DATA CUTI =================
     private void loadData() {
+        String url =
+                "http://10.0.2.2/absensi/public/api/cuti/riwayat?role=admin";
+
         StringRequest request = new StringRequest(
                 Request.Method.GET,
-                URL_LIST,
+                url,
                 response -> {
                     try {
                         Log.d("CUTI_ADMIN_DEBUG", response);
                         JSONObject obj = new JSONObject(response);
+                        String statusResponse =
+                                obj.optString("status", "");
 
-                        String statusResponse = obj.optString("status", "");
                         if (!statusResponse.equalsIgnoreCase("success")) {
-                            Toast.makeText(this, obj.optString("message", "Gagal memuat data"), Toast.LENGTH_SHORT).show();
+
+                            Toast.makeText(
+                                    this,
+                                    obj.optString("message",
+                                            "Gagal memuat data"),
+                                    Toast.LENGTH_SHORT
+                            ).show();
                             return;
                         }
 
@@ -100,44 +110,106 @@ public class CutiAdminActivity extends AppCompatActivity {
                         adapter.notifyDataSetChanged();
 
                     } catch (Exception e) {
-                        Log.e("CUTI_ADMIN_DEBUG", "JSON Error: ", e);
+
+                        Log.e("CUTI_ADMIN_DEBUG",
+                                "JSON Error", e);
+
+                        Toast.makeText(
+                                this,
+                                e.getMessage(),
+                                Toast.LENGTH_SHORT
+                        ).show();
                     }
                 },
-                error -> Toast.makeText(this, "Gagal terhubung ke server", Toast.LENGTH_SHORT).show()
+                error -> {
+
+                    Log.e("CUTI_ADMIN_DEBUG",
+                            "Volley Error", error);
+
+                    Toast.makeText(
+                            this,
+                            "Gagal terhubung ke server",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
         );
 
         queue.add(request);
     }
-
     // ================= UPDATE STATUS CUTI ================
     private void updateStatus(String id, String status) {
-        String url = "http://10.0.2.2/absensi/public/api/cuti/update/" + id;
+
+        String url = "http://10.0.2.2/absensi/public/api/cuti/updateStatus";
 
         StringRequest request = new StringRequest(
                 Request.Method.POST,
                 url,
                 response -> {
                     try {
+
                         Log.d("CUTI_ADMIN_DEBUG", response);
+
                         JSONObject obj = new JSONObject(response);
-                        String statusResponse = obj.optString("status", "");
-                        String msg = obj.optString("message", "Berhasil memperbarui status");
 
-                        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                        boolean success = false;
 
-                        if (statusResponse.equalsIgnoreCase("success") || statusResponse.equalsIgnoreCase("true")) {
+                        if (obj.has("status")) {
+                            Object st = obj.get("status");
+
+                            if (st instanceof Boolean) {
+                                success = (Boolean) st;
+                            } else {
+                                success = "success".equalsIgnoreCase(st.toString())
+                                        || "true".equalsIgnoreCase(st.toString());
+                            }
+                        }
+
+                        Toast.makeText(
+                                CutiAdminActivity.this,
+                                obj.optString("message"),
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                        if (success) {
                             loadData();
                         }
+
                     } catch (Exception e) {
-                        Toast.makeText(this, "Gagal memproses respon server", Toast.LENGTH_SHORT).show();
+                        Log.e("CUTI_ADMIN_DEBUG", "JSON ERROR", e);
+
+                        Toast.makeText(
+                                CutiAdminActivity.this,
+                                e.getMessage(),
+                                Toast.LENGTH_LONG
+                        ).show();
                     }
                 },
-                error -> Toast.makeText(this, "Gagal mengubah status", Toast.LENGTH_SHORT).show()
+                error -> {
+
+                    Log.e("CUTI_ADMIN_DEBUG", "VOLLEY ERROR", error);
+
+                    if (error.networkResponse != null) {
+                        Log.e(
+                                "CUTI_ADMIN_DEBUG",
+                                "CODE = " + error.networkResponse.statusCode
+                        );
+                    }
+
+                    Toast.makeText(
+                            CutiAdminActivity.this,
+                            "Gagal update status",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
         ) {
             @Override
             protected Map<String, String> getParams() {
+
                 Map<String, String> p = new HashMap<>();
-                p.put("status", status);
+
+                p.put("id", id);          // WAJIB
+                p.put("status", status);  // WAJIB
+
                 return p;
             }
         };

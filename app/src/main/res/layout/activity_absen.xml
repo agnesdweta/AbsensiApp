@@ -3,138 +3,180 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
     android:background="@drawable/bg_gradient"
-    android:padding="24dp">
+    android:gravity="center"
+    android:padding="20dp">
 
-    <!-- MAIN CARD -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardCornerRadius="28dp"
-        app:cardElevation="14dp"
+        app:cardElevation="12dp"
         app:cardBackgroundColor="#FFFFFF">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="28dp"
-            android:gravity="center_horizontal">
+            android:padding="22dp">
 
-            <!-- TOP BAR -->
+            <!-- BACK -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/btnBack"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="10dp">
+                android:paddingBottom="8dp">
 
                 <ImageView
-                    android:id="@+id/btnBack"
-                    android:layout_width="34dp"
-                    android:layout_height="34dp"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
                     android:src="@android:drawable/ic_media_previous"
-                    app:tint="#4F46E5"
-                    android:padding="4dp"/>
+                    app:tint="#4F46E5"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Kembali"
-                    android:textColor="#4F46E5"
                     android:textStyle="bold"
-                    android:textSize="14sp"
+                    android:textColor="#4F46E5"
                     android:layout_marginStart="6dp"/>
             </LinearLayout>
 
             <!-- ICON -->
             <ImageView
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:src="@android:drawable/ic_menu_today"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_gravity="center"
+                android:src="@android:drawable/ic_menu_my_calendar"
                 app:tint="#4F46E5"
-                android:layout_marginBottom="10dp"/>
+                android:layout_marginBottom="8dp"/>
 
             <!-- TITLE -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="ABSENSI KARYAWAN"
-                android:textSize="22sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="#1E1E1E"/>
+                android:textColor="#111827"
+                android:layout_gravity="center"/>
 
             <TextView
+                android:id="@+id/tvHari"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Silakan pilih jenis absensi"
+                android:text=""
                 android:textSize="13sp"
-                android:textColor="#777"
-                android:layout_marginBottom="20dp"/>
-
-            <!-- STATUS -->
-            <TextView
-                android:id="@+id/tvStatus"
+                android:textColor="#6B7280"
+                android:layout_gravity="center"
+                android:layout_marginTop="4dp"/>
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="STATUS: BELUM ABSEN"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:textSize="13sp"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="8dp"
-                android:background="#B91C1C"
-                android:layout_marginBottom="10dp"/>
+                android:orientation="vertical"
+                android:layout_gravity="center"
+                android:gravity="center">
 
-            <!-- JAM -->
-            <TextView
-                android:id="@+id/tvJamMasuk"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Jam: --:--:--"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="#444"
-                android:layout_marginBottom="24dp"/>
-            <ImageView
-                android:id="@+id/imgAbsen"
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="STATUS: BELUM ABSEN"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="6dp"
+                    android:background="@drawable/bg_status_red"
+                    android:layout_marginTop="10dp"/>
+
+                <TextView
+                    android:id="@+id/tvJamMasuk"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--:--"
+                    android:textSize="13sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="20dp"/>
+            </LinearLayout>
+
+            <!-- SELFIE -->
+            <FrameLayout
                 android:layout_width="120dp"
                 android:layout_height="120dp"
-                android:layout_marginTop="16dp"
-                android:scaleType="centerCrop"
-                android:background="#E5E7EB"/>
+                android:layout_gravity="center"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
-            <!-- BUTTON ABSEN MASUK -->
+                <!-- FOTO BULAT -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:cardCornerRadius="60dp"
+                    app:strokeWidth="2dp"
+                    app:strokeColor="#4F46E5"
+                    app:cardElevation="4dp">
+
+                    <ImageView
+                        android:id="@+id/imgSelfie"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@android:drawable/ic_menu_camera"
+                        android:scaleType="centerCrop" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ICON KAMERA (FIXED) -->
+                <ImageView
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_gravity="bottom|end"
+                    android:layout_margin="2dp"
+                    android:translationZ="10dp"
+                    android:elevation="10dp"
+                    android:padding="6dp"
+                    android:background="@drawable/bg_camera_circle"
+                    android:src="@android:drawable/ic_menu_camera"
+                    app:tint="#FFFFFF"/>
+            </FrameLayout>
+
+            <!-- BUTTON MASUK -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnMasuk"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="52dp"
                 android:text="ABSEN MASUK"
                 android:textAllCaps="false"
-                android:textStyle="bold"
-                android:textSize="15sp"
                 android:textColor="#FFFFFF"
                 android:backgroundTint="#4F46E5"
-                app:cornerRadius="16dp"
-                android:layout_marginBottom="14dp"/>
+                app:cornerRadius="14dp"
+                android:layout_marginTop="16dp"
 
-            <!-- BUTTON ABSEN KELUAR -->
+                app:icon="@drawable/ic_login"
+                app:iconTint="#FFFFFF"
+                app:iconPadding="10dp"
+                app:iconGravity="textStart"/>
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnKeluar"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="52dp"
                 android:text="ABSEN KELUAR"
                 android:textAllCaps="false"
-                android:textStyle="bold"
-                android:textSize="15sp"
                 android:textColor="#FFFFFF"
                 android:backgroundTint="#9333EA"
-                app:cornerRadius="16dp"/>
+                app:cornerRadius="14dp"
+                android:layout_marginTop="10dp"
+
+                app:icon="@drawable/ic_logout"
+                app:iconTint="#FFFFFF"
+                app:iconPadding="10dp"
+                app:iconGravity="textStart"/>
+
 
         </LinearLayout>
-
     </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>

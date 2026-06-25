@@ -60,86 +60,135 @@ public class LoginActivity extends AppCompatActivity {
 
                     try {
 
-                        Log.d("LOGIN_DEBUG", response);
+                        Log.d("LOGIN_DEBUG", "Response = " + response);
 
                         JSONObject obj = new JSONObject(response);
 
                         boolean status = obj.optBoolean("status", false);
 
                         if (!status) {
-                            Toast.makeText(this,
+                            Toast.makeText(
+                                    this,
                                     obj.optString("message", "Login gagal"),
-                                    Toast.LENGTH_SHORT).show();
+                                    Toast.LENGTH_LONG
+                            ).show();
                             return;
                         }
 
-                        JSONObject data = obj.getJSONObject("data");
-                        Log.d("LOGIN_DEBUG", String.valueOf(data));
+                        // ================= AMBIL DATA USER =================
+                        JSONObject data = obj.optJSONObject("data");
 
-                        String id = data.optString("id", "");
-                        String idUser = data.optString("id", "");
-                        String idKaryawan = data.optString("id", "");
+                        if (data == null) {
+                            Toast.makeText(
+                                    this,
+                                    "Login gagal: data user kosong",
+                                    Toast.LENGTH_LONG
+                            ).show();
+                            return;
+                        }
+
+                        Log.d("LOGIN_DEBUG", "DATA = " + data.toString());
+
+                        String idKaryawan = data.optString("id_karyawan", "");
+                        String idUser = data.optString("id_user", "");
                         String nama = data.optString("nama", "");
                         String role = data.optString("role", "");
 
-                        if (id.isEmpty()) {
-                            Toast.makeText(this,
-                                    "Login gagal: data user kosong",
-                                    Toast.LENGTH_LONG).show();
+                        // Fallback jika API hanya mengirim field id
+                        if (idKaryawan.isEmpty()) {
+                            idKaryawan = data.optString("id", "");
+                        }
+
+                        if (idUser.isEmpty()) {
+                            idUser = data.optString("id", "");
+                        }
+
+                        Log.d("LOGIN_DEBUG", "idKaryawan = " + idKaryawan);
+                        Log.d("LOGIN_DEBUG", "idUser = " + idUser);
+                        Log.d("LOGIN_DEBUG", "nama = " + nama);
+                        Log.d("LOGIN_DEBUG", "role = " + role);
+
+                        // Admin tidak wajib punya id_karyawan
+                        if (!role.equalsIgnoreCase("admin") && idKaryawan.isEmpty()) {
+                            Toast.makeText(
+                                    this,
+                                    "Login gagal: ID karyawan tidak ditemukan",
+                                    Toast.LENGTH_LONG
+                            ).show();
                             return;
                         }
 
-                        // ================= SAVE USER =================
+                        // ================= SIMPAN SESSION =================
                         SharedPreferences.Editor editor = sharedPreferences.edit();
 
-                        editor.putString("id", id);
-                        editor.putString("id_user", idUser);
                         editor.putString("id_karyawan", idKaryawan);
+                        editor.putString("id_user", idUser);
                         editor.putString("nama", nama);
                         editor.putString("role", role);
 
-                        // ================= RESET ABSENSI CACHE =================
                         editor.remove("jam_masuk");
                         editor.remove("jam_pulang");
                         editor.remove("status_absen");
 
                         editor.apply();
 
-                        Toast.makeText(this, "Login berhasil", Toast.LENGTH_SHORT).show();
+                        Log.d("LOGIN_DEBUG",
+                                "SESSION TERSIMPAN : " +
+                                        sharedPreferences.getString("id_karyawan", ""));
+
+                        Toast.makeText(
+                                this,
+                                "Login berhasil",
+                                Toast.LENGTH_SHORT
+                        ).show();
 
                         Intent intent;
 
                         if ("admin".equalsIgnoreCase(role)) {
-                            intent = new Intent(this, AdminDashboardActivity.class);
+                            intent = new Intent(
+                                    LoginActivity.this,
+                                    AdminDashboardActivity.class
+                            );
                         } else {
-                            intent = new Intent(this, MainActivity.class);
+                            intent = new Intent(
+                                    LoginActivity.this,
+                                    MainActivity.class
+                            );
                         }
 
                         startActivity(intent);
                         finish();
 
                     } catch (Exception e) {
-                        Toast.makeText(this,
-                                "JSON ERROR: " + e.getMessage(),
-                                Toast.LENGTH_LONG).show();
-                    }
 
+                        Log.e("LOGIN_DEBUG", "ERROR", e);
+
+                        Toast.makeText(
+                                this,
+                                "JSON ERROR : " + e.getMessage(),
+                                Toast.LENGTH_LONG
+                        ).show();
+                    }
                 },
                 error -> {
 
-                    error.printStackTrace();
+                    Log.e("LOGIN_DEBUG", "VOLLEY ERROR", error);
 
-                    Toast.makeText(this,
+                    Toast.makeText(
+                            this,
                             "Server error / tidak bisa diakses",
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_LONG
+                    ).show();
                 }
         ) {
-
             @Override
             protected Map<String, String> getParams() {
+
                 Map<String, String> params = new HashMap<>();
+
                 params.put("username", username);
                 params.put("password", password);
+
                 return params;
             }
         };

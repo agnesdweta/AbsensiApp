@@ -28,8 +28,6 @@ public class RiwayatCutiActivity extends AppCompatActivity {
     List<CutiModel> list = new ArrayList<>();
     CutiAdapter adapter;
 
-    String URL = "http://10.0.2.2/absensi/public/api/cuti/riwayat";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,74 +47,130 @@ public class RiwayatCutiActivity extends AppCompatActivity {
     }
 
     private void loadData() {
+
         SharedPreferences sp = getSharedPreferences("user", MODE_PRIVATE);
 
-        String id_karyawan = sp.getString("id", "");
+        String id_karyawan = sp.getString("id_karyawan", "");
         String role = sp.getString("role", "");
 
-        Log.d("RIWAYAT_DEBUG", "id_karyawan login = " + id_karyawan);
-        Log.d("RIWAYAT_DEBUG", "role login = " + role);
+        Log.d("RIWAYAT_DEBUG", "id_karyawan = " + id_karyawan);
+        Log.d("RIWAYAT_DEBUG", "role = " + role);
 
         if (id_karyawan.isEmpty()) {
-            Toast.makeText(this, "User belum login atau ID kosong", Toast.LENGTH_LONG).show();
+            Toast.makeText(
+                    this,
+                    "User belum login atau ID kosong",
+                    Toast.LENGTH_LONG
+            ).show();
             return;
         }
 
-        StringRequest request = new StringRequest(Request.Method.GET, URL,
+        String url =
+                "http://10.0.2.2/absensi/public/api/cuti/riwayat?id_karyawan="
+                        + id_karyawan;
+
+        StringRequest request = new StringRequest(
+                Request.Method.GET,
+                url,
                 response -> {
+
                     try {
+
                         Log.d("RIWAYAT_RESPONSE", response);
+
                         JSONObject obj = new JSONObject(response);
 
-                        String statusResponse = obj.optString("status", "");
-                        if (!statusResponse.equalsIgnoreCase("success")) {
-                            Toast.makeText(this,
-                                    obj.optString("message", "Gagal memuat riwayat cuti"),
-                                    Toast.LENGTH_LONG).show();
+                        Object st = obj.get("status");
+
+                        boolean success =
+                                (st instanceof Boolean && (Boolean) st)
+                                        || "success".equalsIgnoreCase(st.toString())
+                                        || "true".equalsIgnoreCase(st.toString());
+
+                        if (!success) {
+
+                            Toast.makeText(
+                                    this,
+                                    obj.optString(
+                                            "message",
+                                            "Gagal memuat riwayat cuti"
+                                    ),
+                                    Toast.LENGTH_LONG
+                            ).show();
+
                             return;
                         }
 
-                        JSONArray arr = obj.getJSONArray("data");
+                        JSONArray arr = obj.optJSONArray("data");
+
                         list.clear();
 
-                        for (int i = 0; i < arr.length(); i++) {
-                            JSONObject item = arr.getJSONObject(i);
+                        if (arr != null) {
 
-                            String karyawanIdFromServer = item.optString("id_karyawan", "");
+                            for (int i = 0; i < arr.length(); i++) {
 
-                            if (karyawanIdFromServer.equals(id_karyawan)) {
-                                list.add(new CutiModel(
-                                        item.optString("id"),
-                                        karyawanIdFromServer,
-                                        item.optString("tanggal_mulai"),
-                                        item.optString("tanggal_selesai"),
-                                        item.optString("keterangan"),
-                                        item.optString("status")
-                                ));
+                                JSONObject item = arr.getJSONObject(i);
+
+                                list.add(
+                                        new CutiModel(
+                                                item.optString("id"),
+                                                item.optString("id_karyawan"),
+                                                item.optString("tanggal_mulai"),
+                                                item.optString("tanggal_selesai"),
+                                                item.optString("keterangan"),
+                                                item.optString("status")
+                                        )
+                                );
                             }
                         }
 
                         adapter.notifyDataSetChanged();
 
                         if (list.isEmpty()) {
-                            Toast.makeText(this, "Tidak ada riwayat cuti untuk Anda", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(
+                                    this,
+                                    "Belum ada riwayat cuti",
+                                    Toast.LENGTH_SHORT
+                            ).show();
                         }
 
                     } catch (Exception e) {
-                        Log.e("RIWAYAT_DEBUG", "Parsing JSON Error: ", e);
-                        Toast.makeText(this, "Parse Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+
+                        Log.e(
+                                "RIWAYAT_DEBUG",
+                                "JSON ERROR",
+                                e
+                        );
+
+                        Toast.makeText(
+                                this,
+                                e.getMessage(),
+                                Toast.LENGTH_LONG
+                        ).show();
                     }
                 },
                 error -> {
-                    String msg = "Gagal load data";
+
+                    Log.e(
+                            "RIWAYAT_DEBUG",
+                            "NETWORK ERROR",
+                            error
+                    );
+
+                    String msg = "Gagal terhubung ke server";
+
                     if (error.networkResponse != null) {
-                        msg = "HTTP CODE: " + error.networkResponse.statusCode;
+                        msg = "HTTP " + error.networkResponse.statusCode;
                     }
-                    Log.e("RIWAYAT_DEBUG", "Network Error: ", error);
-                    Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+
+                    Toast.makeText(
+                            this,
+                            msg,
+                            Toast.LENGTH_LONG
+                    ).show();
                 }
         );
 
-        Volley.newRequestQueue(getApplicationContext()).add(request);
+        Volley.newRequestQueue(this).add(request);
     }
 }
