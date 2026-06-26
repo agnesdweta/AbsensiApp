@@ -52,7 +52,6 @@ public class KelolaKaryawanActivity extends AppCompatActivity {
 
         rvKaryawan.setLayoutManager(new LinearLayoutManager(this));
 
-        // 🔥 FIX UTAMA DI SINI
         adapter = new KaryawanAdapter(list, new KaryawanAdapter.OnItemClick() {
             @Override
             public void onEdit(KaryawanModel karyawan) {
@@ -73,19 +72,18 @@ public class KelolaKaryawanActivity extends AppCompatActivity {
         loadKaryawan();
     }
 
-    // ================= LOAD DATA =================
+    // ================= LOAD =================
     private void loadKaryawan() {
 
         StringRequest request = new StringRequest(Request.Method.GET, BASE_URL,
                 response -> {
                     try {
-
                         list.clear();
 
                         JSONArray data;
                         try {
                             JSONObject obj = new JSONObject(response);
-                            data = obj.has("data") ? obj.getJSONArray("data") : new JSONArray(response);
+                            data = obj.getJSONArray("data");
                         } catch (Exception e) {
                             data = new JSONArray(response);
                         }
@@ -97,7 +95,9 @@ public class KelolaKaryawanActivity extends AppCompatActivity {
                                     obj.optString("id"),
                                     obj.optString("nama"),
                                     obj.optString("jabatan"),
-                                    obj.optString("telp")
+                                    obj.optString("telp"),
+                                    obj.optString("username"),
+                                    obj.optString("password")
                             ));
                         }
 
@@ -118,16 +118,13 @@ public class KelolaKaryawanActivity extends AppCompatActivity {
 
         View view = LayoutInflater.from(this)
                 .inflate(R.layout.dialog_tambah_karyawan, null);
-        TextView tvTitle = view.findViewById(R.id.tvTitle);
-        tvTitle.setText("TAMBAH KARYAWAN");
 
         EditText etNama = view.findViewById(R.id.etNama);
         EditText etJabatan = view.findViewById(R.id.etJabatan);
         EditText etTelp = view.findViewById(R.id.etTelp);
+        EditText etUsername = view.findViewById(R.id.etUsername);
+        EditText etPassword = view.findViewById(R.id.etPassword);
 
-        etNama.setText("");
-        etJabatan.setText("");
-        etTelp.setText("");
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(view)
                 .create();
@@ -135,37 +132,32 @@ public class KelolaKaryawanActivity extends AppCompatActivity {
         dialog.show();
 
         view.findViewById(R.id.btnSimpan).setOnClickListener(v -> {
-            tambahKaryawan(
-                    etNama.getText().toString(),
-                    etJabatan.getText().toString(),
-                    etTelp.getText().toString(),
-                    dialog
-            );
+
+            StringRequest request = new StringRequest(Request.Method.POST,
+                    BASE_URL + "/tambah",
+                    response -> {
+                        Toast.makeText(this, "Berhasil tambah", Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                        loadKaryawan();
+                    },
+                    error -> Toast.makeText(this, "Gagal tambah", Toast.LENGTH_SHORT).show()
+            ) {
+                @Override
+                protected Map<String, String> getParams() {
+                    Map<String, String> p = new HashMap<>();
+                    p.put("nama", etNama.getText().toString());
+                    p.put("jabatan", etJabatan.getText().toString());
+                    p.put("telp", etTelp.getText().toString());
+                    p.put("username", etUsername.getText().toString());
+                    p.put("password", etPassword.getText().toString());
+                    return p;
+                }
+            };
+
+            requestQueue.add(request);
         });
+
         view.findViewById(R.id.btnBatal).setOnClickListener(v -> dialog.dismiss());
-    }
-    private void tambahKaryawan(String nama, String jabatan, String telp, AlertDialog dialog) {
-
-        StringRequest request = new StringRequest(Request.Method.POST,
-                BASE_URL + "/tambah",
-                response -> {
-                    Toast.makeText(this, "Berhasil tambah", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                    loadKaryawan();
-                },
-                error -> Toast.makeText(this, "Gagal tambah", Toast.LENGTH_SHORT).show()
-        ) {
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> p = new HashMap<>();
-                p.put("nama", nama);
-                p.put("jabatan", jabatan);
-                p.put("telp", telp);
-                return p;
-            }
-        };
-
-        requestQueue.add(request);
     }
 
     // ================= EDIT =================
@@ -173,16 +165,21 @@ public class KelolaKaryawanActivity extends AppCompatActivity {
 
         View view = LayoutInflater.from(this)
                 .inflate(R.layout.dialog_tambah_karyawan, null);
+
         TextView tvTitle = view.findViewById(R.id.tvTitle);
         tvTitle.setText("EDIT KARYAWAN");
 
         EditText etNama = view.findViewById(R.id.etNama);
         EditText etJabatan = view.findViewById(R.id.etJabatan);
         EditText etTelp = view.findViewById(R.id.etTelp);
+        EditText etUsername = view.findViewById(R.id.etUsername);
+        EditText etPassword = view.findViewById(R.id.etPassword);
 
         etNama.setText(k.getNama());
         etJabatan.setText(k.getJabatan());
         etTelp.setText(k.getTelp());
+        etUsername.setText(k.getUsername());
+        etPassword.setText(k.getPassword());
 
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(view)
@@ -197,6 +194,8 @@ public class KelolaKaryawanActivity extends AppCompatActivity {
                     etNama.getText().toString(),
                     etJabatan.getText().toString(),
                     etTelp.getText().toString(),
+                    etUsername.getText().toString(),
+                    etPassword.getText().toString(),
                     dialog
             );
         });
@@ -204,8 +203,19 @@ public class KelolaKaryawanActivity extends AppCompatActivity {
         view.findViewById(R.id.btnBatal).setOnClickListener(v -> dialog.dismiss());
     }
 
-    private void updateKaryawan(String id, String nama, String jabatan, String telp, AlertDialog dialog) {
+    // ================= UPDATE =================
+    private void updateKaryawan(
+            String id,
+            String nama,
+            String jabatan,
+            String telp,
+            String username,
+            String password,
+            AlertDialog dialog
+    ) {
+
         String url = BASE_URL + "/update/" + id;
+
         StringRequest request = new StringRequest(Request.Method.POST,
                 url,
                 response -> {
@@ -213,16 +223,7 @@ public class KelolaKaryawanActivity extends AppCompatActivity {
                     dialog.dismiss();
                     loadKaryawan();
                 },
-                error -> {
-                    String msg = "ERROR";
-
-                    if (error.networkResponse != null) {
-                        msg = "HTTP " + error.networkResponse.statusCode;
-                    } else if (error.getMessage() != null) {
-                        msg = error.getMessage();
-                    }
-                    Toast.makeText(this, "Gagal update: " + msg, Toast.LENGTH_LONG).show();
-                }
+                error -> Toast.makeText(this, "Gagal update", Toast.LENGTH_SHORT).show()
         ) {
             @Override
             protected Map<String, String> getParams() {
@@ -230,6 +231,8 @@ public class KelolaKaryawanActivity extends AppCompatActivity {
                 p.put("nama", nama);
                 p.put("jabatan", jabatan);
                 p.put("telp", telp);
+                p.put("username", username);
+                p.put("password", password);
                 return p;
             }
         };
@@ -250,24 +253,15 @@ public class KelolaKaryawanActivity extends AppCompatActivity {
 
     private void deleteKaryawan(String id) {
 
-        String url = BASE_URL + "/delete/" + id;
+        String url = BASE_URL + "/" + id;
 
-        StringRequest request = new StringRequest(Request.Method.POST,
+        StringRequest request = new StringRequest(Request.Method.DELETE,
                 url,
                 response -> {
                     Toast.makeText(this, "Berhasil hapus", Toast.LENGTH_SHORT).show();
                     loadKaryawan();
                 },
-                error -> {
-
-                    String msg = "UNKNOWN ERROR";
-
-                    if (error.networkResponse != null) {
-                        msg = "HTTP CODE: " + error.networkResponse.statusCode;
-                    }
-
-                    Toast.makeText(this, "Gagal hapus: " + msg, Toast.LENGTH_LONG).show();
-                }
+                error -> Toast.makeText(this, "Gagal hapus", Toast.LENGTH_SHORT).show()
         );
 
         requestQueue.add(request);
